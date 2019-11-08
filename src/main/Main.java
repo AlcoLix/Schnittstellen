@@ -10,7 +10,7 @@ public class Main {
 
 	public static void main(String[] args) {
         try {
-			URL url = new URL("http://api.openweathermap.org/data/2.5/forecast/daily");
+			URL url = new URL("https://api.chucknorris.io/jokes/random"); //http://api.openweathermap.org/data/2.5/forecast/daily
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             conn.setRequestProperty("Accept", "application/json");
