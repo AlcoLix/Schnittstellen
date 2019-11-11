@@ -8,7 +8,7 @@ import java.net.URL;
 
 // main - Klasse
 public class Main {
-	//in einer Klasse muss es static sein, da für alle gleich
+	// in einer Klasse muss es static sein, da für alle gleich
 	private static String urlString;
 	// Main-Methode
 	public static void main(String[] args) {
