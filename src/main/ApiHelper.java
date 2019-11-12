@@ -6,6 +6,7 @@ package main;
  *
  */
 public class ApiHelper {
+	//Variable anlegen, in der die URL gespeichert werden soll
 	private String urlString;
 	public void setBaseString(String urlString) {
 		this.urlString = urlString; 
@@ -14,12 +15,11 @@ public class ApiHelper {
 		return urlString;
 	}
 
-	
 	// Methoden, die für die Authentifizierung notwendig sind
 	
 	/* Methode, die den String für die Authentifizierung zusammensetzt, und dabei den String vor und nach dem ? zerschneidet
 	 und dazwischen die anderen Methoden ausführt, so dass ? und & an der richtigen Stelle sind */
-	public  void appendMethod(String method) {
+	public void appendMethod(String method) {
 		
 		if(urlString.contains("?")) {
 			int pos = urlString.indexOf('?');
@@ -31,25 +31,29 @@ public class ApiHelper {
 			urlString += "/"+method;
 		}
 	}
-	// Methode für das Jahr mit Parameterübergabe; hier ein int
+	/*// Methode für das Jahr mit Parameterübergabe; hier ein int
 	public void appendYear(int year) {
 		checkAndAppendConcatenator();
 		urlString += "year="+year;
 	}
+		
 	// Methode für das Jahr mit Parameterübergabe; hier ein String
 	public void appendYear(String year) {
 		appendYear(Integer.parseInt(year));
 	}
+	
 	// Methode für den API-Key
 	public void appendCredentials() {
 		checkAndAppendConcatenator();
 		urlString += "api_key=416952d00c2786b01c36f84da35bd28937656220"; 
 	}
+	
 	// Methode um den String für die Land-Abfrage zu erstellen
 	public  void appendCountry(String country) {
 		checkAndAppendConcatenator();
 		urlString += "country="+country;
-	}
+	}*/
+	
 	// Methode, um zu prüfen, ob die URL schon ein ? besitzt
 	private void checkAndAppendConcatenator() {
 		if(urlString.contains("?")) {
@@ -58,7 +62,13 @@ public class ApiHelper {
 			urlString += "?";
 		}
 	}
-	
+	/*
+	 * Methode, die den urlString zusammensetzt, Verknüpfung aller Methoden zu einer Methode
+	 */
+	public void appendKeyValue(String key, String value) {
+		checkAndAppendConcatenator();
+		urlString += key + "=" + value;
+	}
 	//------------- Singleton Code only below
 	/**
 	 * The Instance, should only exist once
