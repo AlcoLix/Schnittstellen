@@ -1,5 +1,11 @@
 package main;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
 /**
  * Singleton, contains all methods and variables of the used API
  * @author Dennis Rünzler
@@ -68,6 +74,34 @@ public class ApiHelper {
 	public void appendKeyValue(String key, String value) {
 		checkAndAppendConcatenator();
 		urlString += key + "=" + value;
+	}
+	
+	public StringBuffer sendRequest() {
+		StringBuffer output = new StringBuffer();
+		//try-catch Konstrukt; dritte Erweiterung wäre finally; finally ist wie ein Aufräumer, was hier steht, wird auf jeden Fall gemacht
+		try {
+		// Aufbau der Verbindung mit HTTP-Code-Abfrage
+				URL url = new URL(ApiHelper.getInstance().getUrlString());
+				HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+				conn.setRequestMethod("GET");
+				conn.setRequestProperty("Accept", "application/json");
+				if (conn.getResponseCode() != 200) {
+					throw new RuntimeException("Failed : HTTP Error code : " + conn.getResponseCode());
+				}
+				InputStreamReader in = new InputStreamReader(conn.getInputStream()); // Instanziertes Objekt InputStreamReader namens in, zeigt mir, was ich an Informationen bekomme; kommt von der Klasse InputStream
+				BufferedReader br = new BufferedReader(in); // liest zeilenweise und bezieht seine Daten vom InputStreamReader, Daten werden im Puffer zwischengespeichert; kann Geschwindigkeitsvorteile bringen
+				String line;
+				// Schleife, ob die Daten, die ich bekomme, das Ende erreicht haben oder nicht, wenn ja, dann Verbindung beenden
+				while ((line = br.readLine()) != null) {
+					System.out.println(line);
+					output.append(line).append("\r\n");
+				}
+				conn.disconnect();
+			} catch (IOException e) // Fehlerhandling, IOException ist höchste Instanz zum Fehler abfangen
+				{
+				e.printStackTrace(); //das Gleiche wie System.err
+			}
+		return output;
 	}
 	//------------- Singleton Code only below
 	/**
