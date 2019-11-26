@@ -13,11 +13,20 @@ import java.net.URL;
  */
 public class ApiHelper {
 	//Variable anlegen, in der die URL gespeichert werden soll
-	private String urlString;
-	public void setBaseString(String urlString) {
+	private StringBuffer urlString;
+	
+	/*public void setBaseString(String urlString) {
 		this.urlString = urlString; 
 	}
 	public String getUrlString() {
+		return urlString;
+	}*/
+	
+	
+	public void setBaseString(String url) {
+		urlString = new StringBuffer(url);
+	}
+	public StringBuffer getUrlString() {
 		return urlString;
 	}
 
@@ -27,14 +36,15 @@ public class ApiHelper {
 	 und dazwischen die anderen Methoden ausführt, so dass ? und & an der richtigen Stelle sind */
 	public void appendMethod(String method) {
 		
-		if(urlString.contains("?")) {
-			int pos = urlString.indexOf('?');
-			urlString = urlString.substring(0, pos)+"/"+method+urlString.substring(pos);
+		if(urlString.indexOf("?")!=-1) {
+			int pos = urlString.indexOf("?");
+//			urlString = urlString.substring(0, pos)+"/"+method+urlString.substring(pos);
+			urlString.insert(pos, "/"+method);
 			// Alternativ über Arrays, ist aber nicht so sauber da der Rechner mehr Rechenoperationen machen muss, wegen dem '+'
 			// String[] parts = urlString.split("\\?");
 			// urlString += parts[0]+"/"+method+"?"+parts[1];
 		}else {
-			urlString += "/"+method;
+			urlString.append("/").append(method);
 		}
 	}
 	/*// Methode für das Jahr mit Parameterübergabe; hier ein int
@@ -62,10 +72,10 @@ public class ApiHelper {
 	
 	// Methode, um zu prüfen, ob die URL schon ein ? besitzt
 	private void checkAndAppendConcatenator() {
-		if(urlString.contains("?")) {
-			urlString += "&";
+		if(urlString.indexOf("?")!=-1) {
+			urlString.append("&");
 		}else {
-			urlString += "?";
+			urlString.append("?");
 		}
 	}
 	/*
@@ -73,7 +83,7 @@ public class ApiHelper {
 	 */
 	public void appendKeyValue(String key, String value) {
 		checkAndAppendConcatenator();
-		urlString += key + "=" + value;
+		urlString.append(key).append(value);
 	}
 	
 	public StringBuffer sendRequest() {
@@ -81,7 +91,7 @@ public class ApiHelper {
 		//try-catch Konstrukt; dritte Erweiterung wäre finally; finally ist wie ein Aufräumer, was hier steht, wird auf jeden Fall gemacht
 		try {
 		// Aufbau der Verbindung mit HTTP-Code-Abfrage
-				URL url = new URL(ApiHelper.getInstance().getUrlString());
+				URL url = new URL(ApiHelper.getInstance().getUrlString().toString());
 				HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 				conn.setRequestMethod("GET");
 				conn.setRequestProperty("Accept", "application/json");
