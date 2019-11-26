@@ -83,7 +83,7 @@ public class ApiHelper {
 	 */
 	public void appendKeyValue(String key, String value) {
 		checkAndAppendConcatenator();
-		urlString.append(key).append(value);
+		urlString.append(key).append("=").append(value);
 	}
 	
 	public StringBuffer sendRequest() {

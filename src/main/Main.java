@@ -25,6 +25,7 @@ public class Main {
 			ApiHelper.getInstance().appendKeyValue("type", "local");
 			
 			StringBuffer output =  ApiHelper.getInstance().sendRequest();
-			Parser.parse(output);
+			StringBuffer parsedoutput = Parser.parse(output);
+			CSVOutput.writeoutput(parsedoutput);
 	}
 }
