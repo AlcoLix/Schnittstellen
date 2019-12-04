@@ -12,14 +12,32 @@ public class Parser {
 		JSONObject content = new JSONObject(buf.toString());
 		JSONObject response = content.getJSONObject("response");
 		StringBuffer output = new StringBuffer();
+		boolean hasHeader = false;
 		for (int i = 0; i < response.getJSONArray("holidays").length(); i++) {
 			JSONObject holiday = response.getJSONArray("holidays").getJSONObject(i);
-			
-			output.append("Name" + "\t\t\t" + "Beschreibung" + "\t\t\t" + "Datum"+ "\r\n");
-			output.append(holiday.getString("name")).append(";").append(" ");
-			output.append(holiday.getString("description")).append(";").append(" ");
-			output.append(holiday.getJSONObject("date").getString("iso")).append("\r\n");
-			
+			if(!hasHeader) {
+				for (Object keyName : holiday.names()) {
+					output.append(keyName).append(";");
+				}
+				output.append("\r\n");
+			}
+			for (Object keyName : holiday.names()) {
+				if(holiday.get(keyName.toString()) instanceof JSONObject) {
+					for (Object subKeyName : ((JSONObject)holiday.get(keyName.toString())).names()) {
+						output.append(((JSONObject)holiday.get(keyName.toString())).get(subKeyName.toString())).append(" | ");
+					}
+					output.append(";");
+				} else if(holiday.get(keyName.toString()) instanceof String) {
+					output.append(holiday.getString(keyName.toString())).append(";");
+				} else {
+					output.append(holiday.get(keyName.toString())).append(";");
+				}
+			}
+			output.append("\r\n");
+//			output.append("Name").append(";").append("Beschreibung").append(";").append("Datum").append("\r\n");
+//			output.append(holiday.getString("name")).append(";").append(" ");
+//			output.append(holiday.getString("description")).append(";").append(" ");
+//			output.append(holiday.getJSONObject("date").getString("iso")).append("\r\n");
 		}
 		return output;
 	}
