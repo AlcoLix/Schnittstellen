@@ -15,8 +15,9 @@ public class Parser {
 		for (int i = 0; i < response.getJSONArray("holidays").length(); i++) {
 			JSONObject holiday = response.getJSONArray("holidays").getJSONObject(i);
 			
-			output.append(holiday.getString("name")).append(";");
-			output.append(holiday.getString("description")).append(";");
+			output.append("Name" + "\t\t\t" + "Beschreibung" + "\t\t\t" + "Datum"+ "\r\n");
+			output.append(holiday.getString("name")).append(";").append(" ");
+			output.append(holiday.getString("description")).append(";").append(" ");
 			output.append(holiday.getJSONObject("date").getString("iso")).append("\r\n");
 			
 		}
