@@ -25,7 +25,7 @@ public class Main {
 			ApiHelper.getInstance().appendKeyValue("type", "local");
 			
 			StringBuffer output =  ApiHelper.getInstance().sendRequest();
-			StringBuffer parsedoutput = Parser.parse(output);
+			StringBuffer parsedoutput = Parser.parse(output, "holidays");
 			CSVOutput.writeoutput(parsedoutput);
 	}
 }
