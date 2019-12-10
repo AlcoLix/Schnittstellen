@@ -18,12 +18,35 @@ public class Parser {
 		StringBuffer header = new StringBuffer();
 		StringBuffer output = new StringBuffer();
 		JSONObject content = new JSONObject(buf.toString());
-		Object rootElement = content.get(root);
+		Object rootElement = findElement(content,root);
 		
 		parseElement(header, output, rootElement, root, true, root);
 		StringBuffer result = new StringBuffer(header.toString());
 		result.append("\r\n").append(output);
 		return result;
+	}
+	private static Object findElement(Object object, String name) {
+		if (object instanceof JSONObject) {
+			JSONObject current = (JSONObject)object;
+			for (Object subKey : current.names()) {
+				if(subKey.equals(name)) {
+					return current.get(subKey.toString());
+				}
+				Object foundElement = findElement(current.get(subKey.toString()), name);
+				if(foundElement != null) {
+					return foundElement;
+				}
+			}
+		} else if (object instanceof JSONArray) {
+			JSONArray current = (JSONArray)object;
+			for (int i = 0; i < current.length(); i++) {
+				Object foundElement = findElement(current.get(i), name);
+				if(foundElement != null) {
+					return foundElement;
+				}
+			}
+		}
+		return null;
 	}
 	private static void parseElement(StringBuffer header, StringBuffer output, Object element, String name, boolean firstRow, String rootName) {
 		if (element instanceof JSONObject) {
