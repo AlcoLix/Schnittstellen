@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Hashtable;
 
 /**
  * Singleton, contains all methods and variables of the used API
@@ -85,16 +86,26 @@ public class ApiHelper {
 		checkAndAppendConcatenator();
 		urlString.append(key).append("=").append(value);
 	}
-	
-	public StringBuffer sendRequest() {
+	/**
+	 * sendet den Request mit den eingewstellten Parametern. der urlString muss gesetzt sein!
+	 * @param type GET oder POST
+	 * @param header key-value Paare für die Header-PArameter (z.B. Authentifizierung)
+	 * @return einen String Buffer mit dem JSON
+	 */
+	public StringBuffer sendRequest(String type, Hashtable<String, String>header) {
 		StringBuffer output = new StringBuffer();
 		//try-catch Konstrukt; dritte Erweiterung wäre finally; finally ist wie ein Aufräumer, was hier steht, wird auf jeden Fall gemacht
 		try {
 		// Aufbau der Verbindung mit HTTP-Code-Abfrage
 				URL url = new URL(ApiHelper.getInstance().getUrlString().toString());
 				HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-				conn.setRequestMethod("GET");
+				conn.setRequestMethod(type);
 				conn.setRequestProperty("Accept", "application/json");
+				if(header!=null) {
+					for (String key : header.keySet()) {
+						conn.setRequestProperty(key, header.get(key));	
+					}
+				}
 				if (conn.getResponseCode() != 200) {
 					throw new RuntimeException("Failed : HTTP Error code : " + conn.getResponseCode());
 				}
@@ -112,6 +123,10 @@ public class ApiHelper {
 				e.printStackTrace(); //das Gleiche wie System.err
 			}
 		return output;
+	}
+	
+	public StringBuffer sendRequest() {
+		return this.sendRequest("GET", null);
 	}
 	//------------- Singleton Code only below
 	/**
