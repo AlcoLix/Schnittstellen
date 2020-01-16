@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Hashtable;
 
 /**
  * Singleton, contains all methods and variables of the used API
@@ -14,7 +13,7 @@ import java.util.Hashtable;
  */
 public class ApiHelper {
 	//Variable anlegen, in der die URL gespeichert werden soll
-	private StringBuffer urlString;
+	protected StringBuffer urlString;
 	
 	/*public void setBaseString(String urlString) {
 		this.urlString = urlString; 
@@ -72,13 +71,14 @@ public class ApiHelper {
 	}*/
 	
 	// Methode, um zu prüfen, ob die URL schon ein ? besitzt
-	private void checkAndAppendConcatenator() {
+	protected void checkAndAppendConcatenator() {
 		if(urlString.indexOf("?")!=-1) {
 			urlString.append("&");
 		}else {
 			urlString.append("?");
 		}
 	}
+	
 	/*
 	 * Methode, die den urlString zusammensetzt, Verknüpfung aller Methoden zu einer Methode
 	 */
@@ -86,29 +86,21 @@ public class ApiHelper {
 		checkAndAppendConcatenator();
 		urlString.append(key).append("=").append(value);
 	}
-	/**
-	 * sendet den Request mit den eingewstellten Parametern. der urlString muss gesetzt sein!
-	 * @param type GET oder POST
-	 * @param header key-value Paare für die Header-PArameter (z.B. Authentifizierung)
-	 * @return einen String Buffer mit dem JSON
-	 */
-	public StringBuffer sendRequest(String type, Hashtable<String, String>header) {
+	
+	public StringBuffer sendRequest() {
 		StringBuffer output = new StringBuffer();
-		//try-catch Konstrukt; dritte Erweiterung wäre finally; finally ist wie ein Aufräumer, was hier steht, wird auf jeden Fall gemacht
-		try {
+	
+	//try-catch Konstrukt; dritte Erweiterung wäre finally; finally ist wie ein Aufräumer, was hier steht, wird auf jeden Fall gemacht
+	try {
 		// Aufbau der Verbindung mit HTTP-Code-Abfrage
 				URL url = new URL(ApiHelper.getInstance().getUrlString().toString());
 				HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-				conn.setRequestMethod(type);
+				conn.setRequestMethod("GET");
 				conn.setRequestProperty("Accept", "application/json");
-				if(header!=null) {
-					for (String key : header.keySet()) {
-						conn.setRequestProperty(key, header.get(key));	
-					}
-				}
 				if (conn.getResponseCode() != 200) {
 					throw new RuntimeException("Failed : HTTP Error code : " + conn.getResponseCode());
 				}
+
 				InputStreamReader in = new InputStreamReader(conn.getInputStream()); // Instanziertes Objekt InputStreamReader namens in, zeigt mir, was ich an Informationen bekomme; kommt von der Klasse InputStream
 				BufferedReader br = new BufferedReader(in); // liest zeilenweise und bezieht seine Daten vom InputStreamReader, Daten werden im Puffer zwischengespeichert; kann Geschwindigkeitsvorteile bringen
 				String line;
@@ -124,19 +116,16 @@ public class ApiHelper {
 			}
 		return output;
 	}
-	
-	public StringBuffer sendRequest() {
-		return this.sendRequest("GET", null);
-	}
 	//------------- Singleton Code only below
 	/**
 	 * The Instance, should only exist once
 	 */
-	private static ApiHelper instance;
+	protected static ApiHelper instance;
 	/**
-	 * Constructor should only be called by factory method 
+	 * Constructor should only be called by factory method
+	 * protected so it can be used as superclass 
 	 */
-	private ApiHelper() {
+	protected ApiHelper() {
 	}
 	/**
 	 * Factory Method. Constructor is private to ensure only this method is used to obtain instance
