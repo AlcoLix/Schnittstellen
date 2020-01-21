@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Hashtable;
 
 /**
  * Singleton, contains all methods and variables of the used API
@@ -114,6 +115,7 @@ public class ApiHelper {
 				{
 				e.printStackTrace(); //das Gleiche wie System.err
 			}
+	
 		return output;
 	}
 	//------------- Singleton Code only below
