@@ -66,5 +66,26 @@ public class JiraParser {
 		}
 		return retval;
 	}
-
+	public static StringBuffer parseWorklogsToCsvString(ArrayList<Worklog> worklogs) {
+		StringBuffer csvString = new StringBuffer();
+		csvString.append("Mitarbeiter").append(";");
+		csvString.append("Datum").append(";");
+		csvString.append("Zeit").append(";");
+		csvString.append("Ticket").append(";");
+		csvString.append("Bemerkung").append(";");
+		csvString.append("Auftrag").append(";");
+		csvString.append("Position").append(";");
+		csvString.append("Zeit in Sekunden").append("\r\n");
+		for (Worklog worklog : worklogs) {
+			csvString.append(worklog.getUser()).append(";");
+			csvString.append(worklog.getDate()).append(";");
+			csvString.append(worklog.getTimeSpent()).append(";");
+			csvString.append(worklog.getIssueKey()).append(";");
+			csvString.append("\"").append(worklog.getComment()).append("\"").append(";");
+			csvString.append(worklog.getOrdernumber()).append(";");
+			csvString.append(worklog.getOrderposition()).append(";");
+			csvString.append(worklog.getTimeSpentSeconds()).append("\r\n");
+		}
+		return csvString;
+	}
 }

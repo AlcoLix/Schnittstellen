@@ -19,6 +19,7 @@ public class JiraApiHelper extends ApiHelper {
 	 */
 	public StringBuffer sendRequest(String type, Hashtable<String, String>header) {
 		StringBuffer output = new StringBuffer();
+		System.out.println(ApiHelper.getInstance().getUrlString().toString());
 		//try-catch Konstrukt; dritte Erweiterung wäre finally; finally ist wie ein Aufräumer, was hier steht, wird auf jeden Fall gemacht
 		try {
 		// Aufbau der Verbindung mit HTTP-Code-Abfrage
@@ -64,6 +65,15 @@ public class JiraApiHelper extends ApiHelper {
 	}
 	private String performHtmlEncode(String s) {
 		String retval = s.replace(" ", "%20"); //in der url darf kein leerzeichen vorkommen, stattdessen muss %20 gesendet werden
+		retval = retval.replace("ü", "%C3%BC");
+		retval = retval.replace("Ü", "%C3%9C");
+		retval = retval.replace("ä", "%C3%A4");
+		retval = retval.replace("Ä", "%C3%84");
+		retval = retval.replace("ö", "%C3%B6");
+		retval = retval.replace("Ö", "%C3%96");
+		retval = retval.replace("<", "%3C");
+		retval = retval.replace(">", "%3E");
+		retval = retval.replace("ß", "%C3%9F");
 		return retval;
 	}
 	
