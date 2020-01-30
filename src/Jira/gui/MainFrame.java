@@ -19,6 +19,7 @@ import java.util.Calendar;
 import java.util.Hashtable;
 
 import javax.swing.BorderFactory;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
@@ -41,6 +42,8 @@ import Jira.JiraParser;
 import Jira.Worklog;
 
 public class MainFrame {
+	private String[] users;
+	private String[] projects;
 	private JFrame frame;
 	private JLabel searchStringDisplay;
 	private SettingsDialog settingsDialog;
@@ -50,12 +53,31 @@ public class MainFrame {
 	private void initFrame() {
 		frame = new JFrame("Jira Auswertung");
 		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		initValues();
 		initMenuBar();
 		initContent();
 		frame.pack();
 		frame.setVisible(true);
 	}
 
+	/**
+	 * gets the values for ComboBoxes (users and projects) from the REST API
+	 */
+	private void initValues() {
+		JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/group/member");
+		JiraApiHelper.getInstance().appendKeyValue("groupname", "jira-software-users");
+		Hashtable<String, String> header = new Hashtable<String, String>();
+		// Der Auth-Header mit API-Token in base64 encoding
+		header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5"); 
+		StringBuffer json = JiraApiHelper.getInstance().sendRequest("GET", header);
+		users = JiraParser.parseUsers(json);
+
+		JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/project/search");
+		// Der Auth-Header kann noch einmal verwendet werden 
+		json = JiraApiHelper.getInstance().sendRequest("GET", header);
+		projects = JiraParser.parseProjects(json);
+	}
+	
 	private void initMenuBar() {
 		JMenuBar menuBar = new JMenuBar();
 		frame.setJMenuBar(menuBar);
@@ -155,7 +177,7 @@ public class MainFrame {
 		// Der Auth-Header mit API-Token in base64 encoding
 		header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5"); 
 		StringBuffer json = JiraApiHelper.getInstance().sendRequest("GET", header);
-		worklogList = JiraParser.parse(json);
+		worklogList = JiraParser.parseSearchResults(json);
 		worklogTable.revalidate();
 	}
 
@@ -199,10 +221,10 @@ public class MainFrame {
 
 	@SuppressWarnings("serial")
 	private class SettingsDialog extends JDialog {
-		private JTextField project;
+		private  JComboBox<String> project;
 		private JTextField fromDate;
 		private JTextField toDate;
-		private JTextField user;
+		private JComboBox<String> user;
 
 		private SettingsDialog() {
 			super(frame, true);
@@ -217,8 +239,12 @@ public class MainFrame {
 			};
 			setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 			getContentPane().setLayout(new GridLayout(0, 2));
-			add(new JLabel("Projektschlüssel"));
-			project = new JTextField();
+			add(new JLabel("Projekt"));
+			project = new JComboBox<String>();
+			project.addItem("Alle");
+			for (int i = 0; i < projects.length; i++) {
+				project.addItem(projects[i]);
+			}
 			project.addKeyListener(listener);
 			add(project);
 			add(new JLabel("Datum von (dd.mm.yyyy)"));
@@ -238,7 +264,11 @@ public class MainFrame {
 			toDate.addKeyListener(listener);
 			add(toDate);
 			add(new JLabel("Mitarbeiter"));
-			user = new JTextField();
+			user = new JComboBox<String>();
+			user.addItem("Alle");
+			for (int i = 0; i < users.length; i++) {
+				user.addItem(users[i]);
+			}
 			user.addKeyListener(listener);
 			add(user);
 			pack();
@@ -252,11 +282,11 @@ public class MainFrame {
 		private void dialogClosed() {
 			boolean hasContent = false;
 			StringBuffer buf = new StringBuffer();
-			if (project.getText().length() > 0) {
+			if (project.getSelectedIndex()>0) {
 				if (hasContent) {
 					buf.append(" and ");
 				}
-				buf.append("project = ").append(project.getText());
+				buf.append("project = ").append("\"").append(project.getSelectedItem()).append("\"");
 				hasContent = true;
 			}
 			if (fromDate.getText().matches("\\d\\d\\.\\d\\d\\.\\d\\d\\d\\d")) {
@@ -285,11 +315,11 @@ public class MainFrame {
 					hasContent = true;
 				}
 			}
-			if (user.getText().length() > 0) {
+			if (user.getSelectedIndex()>0) {
 				if (hasContent) {
 					buf.append(" and ");
 				}
-				buf.append("worklogauthor = \"").append(user.getText()).append("\"");
+				buf.append("worklogauthor = \"").append(user.getSelectedItem()).append("\"");
 				hasContent = true;
 			}
 			// mandatory content

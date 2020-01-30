@@ -2,6 +2,7 @@ package Jira;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 
 import org.json.JSONArray;
@@ -10,7 +11,7 @@ import org.json.JSONObject;
 
 public class JiraParser {
 
-	public static ArrayList<Worklog> parse(StringBuffer json) {
+	public static ArrayList<Worklog> parseSearchResults(StringBuffer json) {
 		ArrayList<Worklog> retval = new ArrayList<Worklog>();
 		JSONObject content = new JSONObject(json.toString());
 		JSONArray issues = content.getJSONArray("issues");
@@ -65,6 +66,34 @@ public class JiraParser {
 			}
 		}
 		return retval;
+	}
+	public static String[] parseUsers(StringBuffer json) {
+		//Pagination must be added in case there are more than 50 users
+		JSONObject content = new JSONObject(json.toString());
+		ArrayList<String> users = new ArrayList<String>(content.getInt("total"));
+		JSONArray values = content.getJSONArray("values");
+		for (Object object : values) {
+			JSONObject value = (JSONObject) object;
+			if(value.getString("accountType").equalsIgnoreCase("atlassian")) {
+				users.add(value.getString("displayName"));
+			}
+		}
+		Collections.sort(users);
+		String[] retval = new String[users.size()];
+		return users.toArray(retval);
+	}
+	public static String[] parseProjects(StringBuffer json) {
+		//Pagination must be added in case there are more than 50 users
+		JSONObject content = new JSONObject(json.toString());
+		ArrayList<String> projects = new ArrayList<String>(content.getInt("total"));
+		JSONArray values = content.getJSONArray("values");
+		for (Object object : values) {
+			JSONObject value = (JSONObject) object;
+			projects.add(value.getString("name"));
+		}
+		Collections.sort(projects);
+		String[] retval = new String[projects.size()];
+		return projects.toArray(retval);
 	}
 	public static StringBuffer parseWorklogsToCsvString(ArrayList<Worklog> worklogs) {
 		StringBuffer csvString = new StringBuffer();
