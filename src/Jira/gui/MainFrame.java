@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Hashtable;
@@ -172,7 +173,7 @@ public class MainFrame {
 		JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
 		JiraApiHelper.getInstance().appendKeyValue("jql", searchStringDisplay.getText());
 		JiraApiHelper.getInstance().appendKeyValue("validateQuery", "warn");
-		JiraApiHelper.getInstance().appendKeyValue("fields", "worklog, key,customfield_10030,customfield_10031");
+		JiraApiHelper.getInstance().appendKeyValue("fields", "worklog, key,customfield_10030,customfield_10031,customfield_10033");
 		Hashtable<String, String> header = new Hashtable<String, String>();
 		// Der Auth-Header mit API-Token in base64 encoding
 		header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5"); 
@@ -194,7 +195,7 @@ public class MainFrame {
 			StringBuffer buf = JiraParser.parseWorklogsToCsvString(worklogList);
 			try {
 				Calendar c = Calendar.getInstance();
-				File f = new File(c.get(Calendar.YEAR)+"_"+c.get(Calendar.MONTH)+"_"+c.get(Calendar.DAY_OF_MONTH)+"_"+c.get(Calendar.SECOND)+".csv");
+				File f = new File(c.get(Calendar.YEAR)+"_"+(c.get(Calendar.MONTH)+1)+"_"+c.get(Calendar.DAY_OF_MONTH)+"_"+c.get(Calendar.HOUR_OF_DAY)+"_"+c.get(Calendar.MINUTE)+"_"+c.get(Calendar.SECOND)+".csv");
 				FileWriter writer = new FileWriter(f);
 				writer.write(buf.toString());
 				writer.close();
@@ -336,7 +337,7 @@ public class MainFrame {
 	private class WorklogTableModel extends AbstractTableModel {
 		@Override
 		public int getColumnCount() {
-			return 7;
+			return 8;
 		}
 
 		@Override
@@ -350,7 +351,8 @@ public class MainFrame {
 			case 0:
 				return worklogList.get(rowIndex).getUser();
 			case 1:
-				return worklogList.get(rowIndex).getDate();
+				SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+				return format.format(worklogList.get(rowIndex).getDate());
 			case 2:
 				return worklogList.get(rowIndex).getTimeSpent();
 			case 3:
@@ -361,6 +363,8 @@ public class MainFrame {
 				return worklogList.get(rowIndex).getOrdernumber();
 			case 6:
 				return worklogList.get(rowIndex).getOrderposition();
+			case 7: 
+				return worklogList.get(rowIndex).getCustomer();
 			}
 			return "";
 		}
@@ -382,6 +386,8 @@ public class MainFrame {
 				return "Auftrag";
 			case 6:
 				return "Position";
+			case 7:
+				return "Kunde";
 			}
 			return "";
 		}

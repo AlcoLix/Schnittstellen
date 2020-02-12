@@ -1,5 +1,6 @@
 package Jira;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -33,6 +34,18 @@ public class JiraParser {
 			} catch (JSONException e) {
 				
 			}
+			String customer = "";
+			try {
+				JSONArray customerList = fields.getJSONArray("customfield_10033");
+				for (int i = 0; i < customerList.length(); i++) {
+					customer += customerList.getString(i);
+					if (i+1<customerList.length()) {
+						customer += ", ";
+					}
+				}
+			} catch (JSONException e) {
+				
+			}
 			for (Object object2 : worklogs) {
 				Worklog jiraWorklog = new Worklog();
 				JSONObject log = (JSONObject) object2;
@@ -62,6 +75,7 @@ public class JiraParser {
 				jiraWorklog.setTimeSpentSeconds(timeSpentSeconds);
 				jiraWorklog.setOrdernumber(ordernumber);
 				jiraWorklog.setOrderposition(orderposition);
+				jiraWorklog.setCustomer(customer);
 				retval.add(jiraWorklog);
 			}
 		}
@@ -104,15 +118,18 @@ public class JiraParser {
 		csvString.append("Bemerkung").append(";");
 		csvString.append("Auftrag").append(";");
 		csvString.append("Position").append(";");
+		csvString.append("Kunde").append(";");
 		csvString.append("Zeit in Sekunden").append("\r\n");
 		for (Worklog worklog : worklogs) {
 			csvString.append(worklog.getUser()).append(";");
-			csvString.append(worklog.getDate()).append(";");
+			SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+			csvString.append(format.format(worklog.getDate())).append(";");
 			csvString.append(worklog.getTimeSpent()).append(";");
 			csvString.append(worklog.getIssueKey()).append(";");
-			csvString.append("\"").append(worklog.getComment()).append("\"").append(";");
+			csvString.append("\"").append(worklog.getComment().replaceAll("\r\n", " ")).append("\"").append(";");
 			csvString.append(worklog.getOrdernumber()).append(";");
 			csvString.append(worklog.getOrderposition()).append(";");
+			csvString.append(worklog.getCustomer()).append(";");
 			csvString.append(worklog.getTimeSpentSeconds()).append("\r\n");
 		}
 		return csvString;
