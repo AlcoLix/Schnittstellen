@@ -1,6 +1,7 @@
 package Jira.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -152,8 +153,19 @@ public class MainFrame {
 				return tip;
 			}
 		};
+		worklogTable.getColumnModel().getColumn(0).setPreferredWidth(100);
+		worklogTable.getColumnModel().getColumn(1).setPreferredWidth(125);
+		worklogTable.getColumnModel().getColumn(2).setPreferredWidth(50);
+		worklogTable.getColumnModel().getColumn(3).setPreferredWidth(75);
+		worklogTable.getColumnModel().getColumn(4).setPreferredWidth(75);
+		worklogTable.getColumnModel().getColumn(5).setPreferredWidth(50);
+		worklogTable.getColumnModel().getColumn(6).setPreferredWidth(50);
+		worklogTable.getColumnModel().getColumn(7).setPreferredWidth(200);
 		JScrollPane scrollPane = new JScrollPane(worklogTable);
+		scrollPane.setPreferredSize(new Dimension(725,600));
+		scrollPane.setMinimumSize(new Dimension (725,600));
 		center.add(scrollPane);
+		
 	}
 
 	private void startSearch() {
