@@ -46,6 +46,7 @@ import Jira.Worklog;
 public class MainFrame {
 	private String[] users;
 	private String[] projects;
+	private String[] epics;
 	private JFrame frame;
 	private JLabel searchStringDisplay;
 	private SettingsDialog settingsDialog;
@@ -66,27 +67,30 @@ public class MainFrame {
 	 * gets the values for ComboBoxes (users and projects) from the REST API
 	 */
 	private void initValues() {
+		//
 		JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/group/member");
 		JiraApiHelper.getInstance().appendKeyValue("groupname", "jira-software-users");
 		Hashtable<String, String> header = new Hashtable<String, String>();
 		// Der Auth-Header mit API-Token in base64 encoding
-		header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5"); 
+		header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
 		StringBuffer json = JiraApiHelper.getInstance().sendRequest("GET", header);
 		users = JiraParser.parseUsers(json);
 
 		JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/project/search");
-		// Der Auth-Header kann noch einmal verwendet werden 
+		// Der Auth-Header kann noch einmal verwendet werden
 		json = JiraApiHelper.getInstance().sendRequest("GET", header);
 		projects = JiraParser.parseProjects(json);
+
+		epics = JiraApiHelper.getInstance().queryEpics();
 	}
-	
+
 	private void initMenuBar() {
 		JMenuBar menuBar = new JMenuBar();
 		frame.setJMenuBar(menuBar);
 		JMenu data = new JMenu("Datei");
 		menuBar.add(data);
 		JMenuItem settings = new JMenuItem("Einstellungen");
-		settings.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E,InputEvent.CTRL_DOWN_MASK));
+		settings.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_DOWN_MASK));
 		settings.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -95,7 +99,7 @@ public class MainFrame {
 		});
 		data.add(settings);
 		JMenuItem search = new JMenuItem("Suchen");
-		search.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S,InputEvent.CTRL_DOWN_MASK));
+		search.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
 		search.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -104,7 +108,7 @@ public class MainFrame {
 		});
 		data.add(search);
 		JMenuItem save = new JMenuItem("CSV speichern");
-		save.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C,InputEvent.CTRL_DOWN_MASK));
+		save.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK));
 		save.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -113,7 +117,7 @@ public class MainFrame {
 		});
 		data.add(save);
 		JMenuItem exit = new JMenuItem("Beenden");
-		exit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F4,InputEvent.ALT_DOWN_MASK));
+		exit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F4, InputEvent.ALT_DOWN_MASK));
 		exit.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -162,10 +166,10 @@ public class MainFrame {
 		worklogTable.getColumnModel().getColumn(6).setPreferredWidth(50);
 		worklogTable.getColumnModel().getColumn(7).setPreferredWidth(200);
 		JScrollPane scrollPane = new JScrollPane(worklogTable);
-		scrollPane.setPreferredSize(new Dimension(725,600));
-		scrollPane.setMinimumSize(new Dimension (725,600));
+		scrollPane.setPreferredSize(new Dimension(725, 600));
+		scrollPane.setMinimumSize(new Dimension(725, 600));
 		center.add(scrollPane);
-		
+
 	}
 
 	private void startSearch() {
@@ -185,10 +189,11 @@ public class MainFrame {
 		JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
 		JiraApiHelper.getInstance().appendKeyValue("jql", searchStringDisplay.getText());
 		JiraApiHelper.getInstance().appendKeyValue("validateQuery", "warn");
-		JiraApiHelper.getInstance().appendKeyValue("fields", "worklog, key,customfield_10030,customfield_10031,customfield_10033");
+		JiraApiHelper.getInstance().appendKeyValue("fields",
+				"worklog, key,customfield_10030,customfield_10031,customfield_10033,subtasks");
 		Hashtable<String, String> header = new Hashtable<String, String>();
 		// Der Auth-Header mit API-Token in base64 encoding
-		header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5"); 
+		header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
 		StringBuffer json = JiraApiHelper.getInstance().sendRequest("GET", header);
 		worklogList = JiraParser.parseSearchResults(json);
 		worklogTable.revalidate();
@@ -203,21 +208,25 @@ public class MainFrame {
 	}
 
 	private void exportToFile() {
-		if(worklogList.size()>0) {
+		if (worklogList.size() > 0) {
 			StringBuffer buf = JiraParser.parseWorklogsToCsvString(worklogList);
 			try {
 				Calendar c = Calendar.getInstance();
-				File f = new File(c.get(Calendar.YEAR)+"_"+(c.get(Calendar.MONTH)+1)+"_"+c.get(Calendar.DAY_OF_MONTH)+"_"+c.get(Calendar.HOUR_OF_DAY)+"_"+c.get(Calendar.MINUTE)+"_"+c.get(Calendar.SECOND)+".csv");
+				File f = new File(c.get(Calendar.YEAR) + "_" + (c.get(Calendar.MONTH) + 1) + "_"
+						+ c.get(Calendar.DAY_OF_MONTH) + "_" + c.get(Calendar.HOUR_OF_DAY) + "_"
+						+ c.get(Calendar.MINUTE) + "_" + c.get(Calendar.SECOND) + ".csv");
 				FileWriter writer = new FileWriter(f);
 				writer.write(buf.toString());
 				writer.close();
-				JOptionPane.showInternalMessageDialog(frame.getContentPane(), "Datei "+f.getPath()+" wurde gespeichert", "Datenexport", JOptionPane.INFORMATION_MESSAGE);
+				JOptionPane.showInternalMessageDialog(frame.getContentPane(),
+						"Datei " + f.getPath() + " wurde gespeichert", "Datenexport", JOptionPane.INFORMATION_MESSAGE);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
 	}
+
 	// ------------- Singleton Code only below
 	private static MainFrame instance;
 
@@ -234,24 +243,25 @@ public class MainFrame {
 
 	@SuppressWarnings("serial")
 	private class SettingsDialog extends JDialog {
-		private  JComboBox<String> project;
+		private JComboBox<String> project;
 		private JTextField fromDate;
 		private JTextField toDate;
 		private JComboBox<String> user;
+		private JComboBox<String> epic;
 
 		private SettingsDialog() {
 			super(frame, true);
 			KeyAdapter listener = new KeyAdapter() {
 				@Override
 				public void keyReleased(KeyEvent e) {
-					if(e.getKeyCode() == KeyEvent.VK_ENTER) {
+					if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 						dialogClosed();
 						setVisible(false);
 					}
 				}
 			};
 			setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-			getContentPane().setLayout(new GridLayout(0, 2));
+			setLayout(new GridLayout(0, 2));
 			add(new JLabel("Projekt"));
 			project = new JComboBox<String>();
 			project.addItem("Alle");
@@ -284,6 +294,15 @@ public class MainFrame {
 			}
 			user.addKeyListener(listener);
 			add(user);
+			add(new JLabel("Epic"));
+			epic = new JComboBox<String>();
+			epic.addItem("Alle");
+			for (int i = 0; i < epics.length; i++) {
+				epic.addItem(epics[i]);
+			}
+			epic.addKeyListener(listener);
+			add(epic);
+
 			pack();
 			setVisible(true);
 			this.addWindowListener(new WindowAdapter() {
@@ -292,10 +311,11 @@ public class MainFrame {
 				}
 			});
 		}
+
 		private void dialogClosed() {
-			boolean hasContent = false;
 			StringBuffer buf = new StringBuffer();
-			if (project.getSelectedIndex()>0) {
+			boolean hasContent = false;
+			if (project.getSelectedIndex() > 0) {
 				if (hasContent) {
 					buf.append(" and ");
 				}
@@ -307,11 +327,12 @@ public class MainFrame {
 				int days = Integer.parseInt(s.substring(0, 2));
 				int months = Integer.parseInt(s.substring(3, 5));
 				int year = Integer.parseInt(s.substring(6));
-				if (days < 32 && months <13) { // no need to check if below zero, Text field only accepts numbers
+				if (days < 32 && months < 13) { // no need to check if below zero, Text field only accepts numbers
 					if (hasContent) {
 						buf.append(" and ");
 					}
-					buf.append("worklogdate >= \"").append(year).append("/").append(months).append("/").append(days).append("\"");
+					buf.append("worklogdate >= \"").append(year).append("/").append(months).append("/").append(days)
+							.append("\"");
 					hasContent = true;
 				}
 			}
@@ -320,19 +341,29 @@ public class MainFrame {
 				int days = Integer.parseInt(s.substring(0, 2));
 				int months = Integer.parseInt(s.substring(3, 5));
 				int year = Integer.parseInt(s.substring(6));
-				if (days < 32 && months <13) { // no need to check if below zero, Text field only accepts numbers
+				if (days < 32 && months < 13) { // no need to check if below zero, Text field only accepts numbers
 					if (hasContent) {
 						buf.append(" and ");
 					}
-					buf.append("worklogdate <= \"").append(year).append("/").append(months).append("/").append(days).append("\"");
+					buf.append("worklogdate <= \"").append(year).append("/").append(months).append("/").append(days)
+							.append("\"");
 					hasContent = true;
 				}
 			}
-			if (user.getSelectedIndex()>0) {
+			if (user.getSelectedIndex() > 0) {
 				if (hasContent) {
 					buf.append(" and ");
 				}
 				buf.append("worklogauthor = \"").append(user.getSelectedItem()).append("\"");
+				hasContent = true;
+			}
+			if (epic.getSelectedIndex() > 0) {
+				if (hasContent) {
+					buf.append(" and ");
+				}
+				String epicKey = epic.getSelectedItem().toString();
+				epicKey = epicKey.substring(0, epicKey.indexOf(" | "));
+				buf.append("\"Epic Link\" = \"").append(epicKey).append("\"");
 				hasContent = true;
 			}
 			// mandatory content
@@ -375,7 +406,7 @@ public class MainFrame {
 				return worklogList.get(rowIndex).getOrdernumber();
 			case 6:
 				return worklogList.get(rowIndex).getOrderposition();
-			case 7: 
+			case 7:
 				return worklogList.get(rowIndex).getCustomer();
 			}
 			return "";

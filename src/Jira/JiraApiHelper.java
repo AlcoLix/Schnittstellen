@@ -6,6 +6,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Hashtable;
 
 import main.ApiHelper;
@@ -54,6 +56,36 @@ public class JiraApiHelper extends ApiHelper {
 	
 	public StringBuffer sendRequest() {
 		return this.sendRequest("GET", null);
+	}
+
+	public String[] queryEpics() {
+		// Der Auth-Header kann noch einmal verwendet werden
+		setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
+		appendKeyValue("validateQuery", "warn");
+		appendKeyValue("fields", "key,customfield_10011");
+		appendKeyValue("jql", "type = Epic and category != Test");
+		appendKeyValue("maxResults", "100");
+		Hashtable<String, String> header = new Hashtable<String, String>();
+		// Der Auth-Header mit API-Token in base64 encoding
+		header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
+		StringBuffer json;
+		json = JiraApiHelper.getInstance().sendRequest("GET", header);
+		ArrayList<String> epicList = new ArrayList<>();
+		epicList.addAll(Arrays.asList(JiraParser.parseEpics(json)));
+		int startAt = 0;
+		while((startAt = JiraParser.nextStartAt(json))!=-1) {
+			setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
+			appendKeyValue("validateQuery", "warn");
+			appendKeyValue("fields", "key,customfield_10011");
+			appendKeyValue("jql", "type = Epic and category != Test");
+			appendKeyValue("maxResults", "100");
+			appendKeyValue("startAt", String.valueOf(startAt));
+			json = JiraApiHelper.getInstance().sendRequest("GET", header);
+			epicList.addAll(Arrays.asList(JiraParser.parseEpics(json)));
+		}
+		String[] epics = new String[epicList.size()];
+		epics =epicList.toArray(epics); 
+		return epics;
 	}
 	/*
 	 * Methode, die den urlString zusammensetzt, Verknüpfung aller Methoden zu einer Methode
