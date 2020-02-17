@@ -32,7 +32,7 @@ public class JiraParser {
 	}
 	public static ArrayList<Worklog> queryAndParseSubtask(String subtaskSelflink) {
 		JiraApiHelper.getInstance().setBaseString(subtaskSelflink);
-		JiraApiHelper.getInstance().appendKeyValue("fields", "worklog, key,customfield_10030,customfield_10031,customfield_10033");
+		JiraApiHelper.getInstance().appendKeyValue("fields", "worklog, key,customfield_10030,customfield_10031,customfield_10033,summary");
 		Hashtable<String, String> header = new Hashtable<String, String>();
 		// Der Auth-Header mit API-Token in base64 encoding
 		header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
@@ -49,6 +49,12 @@ public class JiraParser {
 		String ordernumber ="";
 		try { 
 			ordernumber= fields.getString("customfield_10030");
+		} catch (JSONException e) {
+			
+		}
+		String summary ="";
+		try { 
+			summary= fields.getString("summary");
 		} catch (JSONException e) {
 			
 		}
@@ -85,7 +91,8 @@ public class JiraParser {
 			Calendar c = Calendar.getInstance();
 			c.clear();
 			c.set(Calendar.YEAR, Integer.parseInt(started.substring(0, 4)));
-			c.set(Calendar.MONTH, Integer.parseInt(started.substring(5, 7)));
+			//-1 because in the json, the first month is 1, in Calendar it is 0
+			c.set(Calendar.MONTH, Integer.parseInt(started.substring(5, 7))-1);
 			c.set(Calendar.DAY_OF_MONTH, Integer.parseInt(started.substring(8, 10)));
 			c.set(Calendar.HOUR_OF_DAY, Integer.parseInt(started.substring(11, 13)));
 			c.set(Calendar.MINUTE, Integer.parseInt(started.substring(14, 16)));
@@ -100,6 +107,7 @@ public class JiraParser {
 			jiraWorklog.setOrdernumber(ordernumber);
 			jiraWorklog.setOrderposition(orderposition);
 			jiraWorklog.setCustomer(customer);
+			jiraWorklog.setSummary(summary);
 			retval.add(jiraWorklog);
 		}
 		return retval;
@@ -170,6 +178,7 @@ public class JiraParser {
 		csvString.append("Auftrag").append(";");
 		csvString.append("Position").append(";");
 		csvString.append("Kunde").append(";");
+		csvString.append("Ticketname").append(";");
 		csvString.append("Zeit in Sekunden").append("\r\n");
 		for (Worklog worklog : worklogs) {
 			csvString.append(worklog.getUser()).append(";");
@@ -181,6 +190,7 @@ public class JiraParser {
 			csvString.append(worklog.getOrdernumber()).append(";");
 			csvString.append(worklog.getOrderposition()).append(";");
 			csvString.append(worklog.getCustomer()).append(";");
+			csvString.append(worklog.getSummary()).append(";");
 			csvString.append(worklog.getTimeSpentSeconds()).append("\r\n");
 		}
 		return csvString;

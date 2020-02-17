@@ -2,6 +2,8 @@ package Jira.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -14,16 +16,15 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Hashtable;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
-import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -37,11 +38,12 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.border.EtchedBorder;
 import javax.swing.table.AbstractTableModel;
-import javax.swing.text.MaskFormatter;
 
 import Jira.JiraApiHelper;
 import Jira.JiraParser;
 import Jira.Worklog;
+import Jira.utils.GuiUtils;
+import Jira.utils.StringUtils;
 
 public class MainFrame {
 	private String[] users;
@@ -135,7 +137,7 @@ public class MainFrame {
 		panel.add(top, BorderLayout.NORTH);
 		top.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
 		top.add(new JLabel("Suchbefehl:"));
-		searchStringDisplay = new JLabel();
+		searchStringDisplay = new JLabel("timespent > 1");
 		top.add(searchStringDisplay);
 		JPanel center = new JPanel();
 		panel.add(center, BorderLayout.CENTER);
@@ -165,9 +167,10 @@ public class MainFrame {
 		worklogTable.getColumnModel().getColumn(5).setPreferredWidth(50);
 		worklogTable.getColumnModel().getColumn(6).setPreferredWidth(50);
 		worklogTable.getColumnModel().getColumn(7).setPreferredWidth(200);
+		worklogTable.getColumnModel().getColumn(8).setPreferredWidth(200);
 		JScrollPane scrollPane = new JScrollPane(worklogTable);
-		scrollPane.setPreferredSize(new Dimension(725, 600));
-		scrollPane.setMinimumSize(new Dimension(725, 600));
+		scrollPane.setPreferredSize(new Dimension(925, 600));
+		scrollPane.setMinimumSize(new Dimension(925, 600));
 		center.add(scrollPane);
 
 	}
@@ -190,7 +193,7 @@ public class MainFrame {
 		JiraApiHelper.getInstance().appendKeyValue("jql", searchStringDisplay.getText());
 		JiraApiHelper.getInstance().appendKeyValue("validateQuery", "warn");
 		JiraApiHelper.getInstance().appendKeyValue("fields",
-				"worklog, key,customfield_10030,customfield_10031,customfield_10033,subtasks");
+				"worklog, key,customfield_10030,customfield_10031,customfield_10033,subtasks,summary");
 		Hashtable<String, String> header = new Hashtable<String, String>();
 		// Der Auth-Header mit API-Token in base64 encoding
 		header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
@@ -244,10 +247,12 @@ public class MainFrame {
 	@SuppressWarnings("serial")
 	private class SettingsDialog extends JDialog {
 		private JComboBox<String> project;
-		private JTextField fromDate;
-		private JTextField toDate;
+		private JDatePicker fromDate;
+		private JDatePicker toDate;
 		private JComboBox<String> user;
 		private JComboBox<String> epic;
+		private JTextField ordernumber;
+		private JTextField position;
 
 		private SettingsDialog() {
 			super(frame, true);
@@ -261,50 +266,83 @@ public class MainFrame {
 				}
 			};
 			setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-			setLayout(new GridLayout(0, 2));
-			add(new JLabel("Projekt"));
+			setLayout(new GridBagLayout());
+			GridBagConstraints c = new GridBagConstraints();
+			c.fill = GridBagConstraints.BOTH;
+			c.gridx = 0;
+			c.gridy = 0;
+			c.gridheight = 1;
+			c.gridwidth = 1;
+			c.insets.set(1, 1, 1, 1);
+			add(new JLabel("Projekt"), c);
 			project = new JComboBox<String>();
 			project.addItem("Alle");
 			for (int i = 0; i < projects.length; i++) {
 				project.addItem(projects[i]);
 			}
 			project.addKeyListener(listener);
-			add(project);
-			add(new JLabel("Datum von (dd.mm.yyyy)"));
-			try {
-				fromDate = new JFormattedTextField(new MaskFormatter("##.##.####"));
-			} catch (ParseException e1) {
-				e1.printStackTrace();
-			}
+			c.gridy = 0;
+			c.gridx = 1;
+			add(project, c);
+			c.gridy = 1;
+			c.gridx = 0;
+			add(new JLabel("Datum von"), c);
+			fromDate = new JDatePicker();
 			fromDate.addKeyListener(listener);
-			add(fromDate);
-			add(new JLabel("Datum bis (dd.mm.yyyy)"));
-			try {
-				toDate = new JFormattedTextField(new MaskFormatter("##.##.####"));
-			} catch (ParseException e1) {
-				e1.printStackTrace();
-			}
+			c.gridy = 1;
+			c.gridx = 1;
+			add(fromDate, c);
+			c.gridy = 2;
+			c.gridx = 0;
+			add(new JLabel("Datum bis"), c);
+			toDate = new JDatePicker();
 			toDate.addKeyListener(listener);
-			add(toDate);
-			add(new JLabel("Mitarbeiter"));
+			c.gridy = 2;
+			c.gridx = 1;
+			add(toDate, c);
+			c.gridy = 3;
+			c.gridx = 0;
+			add(new JLabel("Mitarbeiter"), c);
 			user = new JComboBox<String>();
 			user.addItem("Alle");
 			for (int i = 0; i < users.length; i++) {
 				user.addItem(users[i]);
 			}
 			user.addKeyListener(listener);
-			add(user);
-			add(new JLabel("Epic"));
+			c.gridy = 3;
+			c.gridx = 1;
+			add(user, c);
+			c.gridy = 4;
+			c.gridx = 0;
+			add(new JLabel("Epic"), c);
 			epic = new JComboBox<String>();
 			epic.addItem("Alle");
 			for (int i = 0; i < epics.length; i++) {
 				epic.addItem(epics[i]);
 			}
 			epic.addKeyListener(listener);
-			add(epic);
-
+			c.gridy = 4;
+			c.gridx = 1;
+			add(epic, c);
+			c.gridy = 5;
+			c.gridx = 0;
+			add(new JLabel("Auftragsnummer"), c);
+			c.gridy = 5;
+			c.gridx = 1;
+			ordernumber = new JTextField();
+			ordernumber.addKeyListener(listener);
+			add(ordernumber, c);
+			c.gridy = 6;
+			c.gridx = 0;
+			add(new JLabel("Position"), c);
+			c.gridy = 6;
+			c.gridx = 1;
+			position = new JTextField();
+			position.addKeyListener(listener);
+			add(position, c);
 			pack();
 			setVisible(true);
+			GuiUtils.centerDialogOnWindow(this, frame);
 			this.addWindowListener(new WindowAdapter() {
 				public void windowClosed(WindowEvent e) {
 					dialogClosed();
@@ -322,33 +360,32 @@ public class MainFrame {
 				buf.append("project = ").append("\"").append(project.getSelectedItem()).append("\"");
 				hasContent = true;
 			}
-			if (fromDate.getText().matches("\\d\\d\\.\\d\\d\\.\\d\\d\\d\\d")) {
-				String s = fromDate.getText();
-				int days = Integer.parseInt(s.substring(0, 2));
-				int months = Integer.parseInt(s.substring(3, 5));
-				int year = Integer.parseInt(s.substring(6));
-				if (days < 32 && months < 13) { // no need to check if below zero, Text field only accepts numbers
-					if (hasContent) {
-						buf.append(" and ");
-					}
-					buf.append("worklogdate >= \"").append(year).append("/").append(months).append("/").append(days)
-							.append("\"");
-					hasContent = true;
+			if (fromDate.getDate() != null) {
+				Date d = fromDate.getDate();
+				Calendar c = Calendar.getInstance();
+				c.setTime(d);
+				if (hasContent) {
+					buf.append(" and ");
 				}
+				buf.append("worklogdate >= \"").append(c.get(Calendar.YEAR)).append("/")
+						.append(c.get(Calendar.MONTH) + 1).append("/").append(c.get(Calendar.DAY_OF_MONTH))
+						.append("\"");
+				hasContent = true;
 			}
-			if (toDate.getText().matches("\\d\\d\\.\\d\\d\\.\\d\\d\\d\\d")) {
-				String s = toDate.getText();
-				int days = Integer.parseInt(s.substring(0, 2));
-				int months = Integer.parseInt(s.substring(3, 5));
-				int year = Integer.parseInt(s.substring(6));
-				if (days < 32 && months < 13) { // no need to check if below zero, Text field only accepts numbers
-					if (hasContent) {
-						buf.append(" and ");
-					}
-					buf.append("worklogdate <= \"").append(year).append("/").append(months).append("/").append(days)
-							.append("\"");
-					hasContent = true;
+			if (toDate.getDate() != null) {
+				Date d = fromDate.getDate();
+				Calendar c = Calendar.getInstance();
+				c.setTime(d);
+				if (hasContent) {
+					buf.append(" and ");
 				}
+				if (hasContent) {
+					buf.append(" and ");
+				}
+				buf.append("worklogdate <= \"").append(c.get(Calendar.YEAR)).append("/")
+						.append(c.get(Calendar.MONTH) + 1).append("/").append(c.get(Calendar.DAY_OF_MONTH))
+						.append("\"");
+				hasContent = true;
 			}
 			if (user.getSelectedIndex() > 0) {
 				if (hasContent) {
@@ -366,6 +403,20 @@ public class MainFrame {
 				buf.append("\"Epic Link\" = \"").append(epicKey).append("\"");
 				hasContent = true;
 			}
+			if (!StringUtils.isEmpty(ordernumber.getText())) {
+				if (hasContent) {
+					buf.append(" and ");
+				}
+				buf.append("cf[10030] = ").append(ordernumber.getText()).append("");
+				hasContent = true;
+			}
+			if (!StringUtils.isEmpty(position.getText())) {
+				if (hasContent) {
+					buf.append(" and ");
+				}
+				buf.append("cf[10031] = ").append(position.getText()).append("");
+				hasContent = true;
+			}
 			// mandatory content
 			if (hasContent) {
 				buf.append(" and ");
@@ -380,7 +431,7 @@ public class MainFrame {
 	private class WorklogTableModel extends AbstractTableModel {
 		@Override
 		public int getColumnCount() {
-			return 8;
+			return 9;
 		}
 
 		@Override
@@ -408,6 +459,8 @@ public class MainFrame {
 				return worklogList.get(rowIndex).getOrderposition();
 			case 7:
 				return worklogList.get(rowIndex).getCustomer();
+			case 8:
+				return worklogList.get(rowIndex).getSummary();
 			}
 			return "";
 		}
@@ -431,6 +484,8 @@ public class MainFrame {
 				return "Position";
 			case 7:
 				return "Kunde";
+			case 8:
+				return "Ticketname";
 			}
 			return "";
 		}

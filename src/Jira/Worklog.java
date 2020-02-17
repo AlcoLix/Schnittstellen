@@ -11,6 +11,13 @@ public class Worklog {
 	private String comment;
 	private String ordernumber;
 	private String orderposition;
+	private String summary;
+	public String getSummary() {
+		return summary;
+	}
+	public void setSummary(String summary) {
+		this.summary = summary;
+	}
 	private String customer;
 	public String getCustomer() {
 		return customer;
