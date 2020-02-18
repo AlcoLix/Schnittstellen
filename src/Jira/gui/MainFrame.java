@@ -225,19 +225,22 @@ public class MainFrame {
 
 	private void exportToFile() {
 		if (worklogList.size() > 0) {
-			StringBuffer buf = JiraParser.parseWorklogsToCsvString(worklogList);
 			try {
-				Calendar c = Calendar.getInstance();
-				File f = new File(c.get(Calendar.YEAR) + "_" + (c.get(Calendar.MONTH) + 1) + "_"
-						+ c.get(Calendar.DAY_OF_MONTH) + "_" + c.get(Calendar.HOUR_OF_DAY) + "_"
-						+ c.get(Calendar.MINUTE) + "_" + c.get(Calendar.SECOND) + ".csv");
-				FileWriter writer = new FileWriter(f);
-				writer.write(buf.toString());
-				writer.close();
-				JOptionPane.showInternalMessageDialog(frame.getContentPane(),
-						"Datei " + f.getPath() + " wurde gespeichert", "Datenexport", JOptionPane.INFORMATION_MESSAGE);
+				String s = JOptionPane.showInputDialog(frame, "Dateiname angeben (ohne Endung)", "Exportdate speichern", JOptionPane.QUESTION_MESSAGE);
+				if(!StringUtils.isEmpty(s)) {
+					StringBuffer buf = JiraParser.parseWorklogsToCsvString(worklogList);
+					File f = new File("latest.csv");
+					FileWriter writer = new FileWriter(f,false);
+					writer.write(buf.toString());
+					writer.close();
+					f = new File(s.split("\\.")[0]+".csv");
+					writer = new FileWriter(f,false);
+					writer.write(buf.toString());
+					writer.close();
+					JOptionPane.showInternalMessageDialog(frame.getContentPane(),
+							"Datei " + f.getCanonicalPath() + " wurde gespeichert", "Datenexport", JOptionPane.INFORMATION_MESSAGE);					
+				}
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
