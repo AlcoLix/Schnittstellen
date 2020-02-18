@@ -137,7 +137,7 @@ public class MainFrame {
 		panel.add(top, BorderLayout.NORTH);
 		top.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
 		top.add(new JLabel("Suchbefehl:"));
-		searchStringDisplay = new JLabel("timespent > 1");
+		searchStringDisplay = new JLabel("timespent > 0");
 		top.add(searchStringDisplay);
 		JPanel center = new JPanel();
 		panel.add(center, BorderLayout.CENTER);
@@ -192,6 +192,7 @@ public class MainFrame {
 		JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
 		JiraApiHelper.getInstance().appendKeyValue("jql", searchStringDisplay.getText());
 		JiraApiHelper.getInstance().appendKeyValue("validateQuery", "warn");
+		JiraApiHelper.getInstance().appendKeyValue("maxResults", "500");
 		JiraApiHelper.getInstance().appendKeyValue("fields",
 				"worklog, key,customfield_10030,customfield_10031,customfield_10033,subtasks,summary");
 		Hashtable<String, String> header = new Hashtable<String, String>();
@@ -199,6 +200,18 @@ public class MainFrame {
 		header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
 		StringBuffer json = JiraApiHelper.getInstance().sendRequest("GET", header);
 		worklogList = JiraParser.parseSearchResults(json);
+		int startAt = 0;
+		while((startAt = JiraParser.nextStartAt(json))!=-1) {
+			JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
+			JiraApiHelper.getInstance().appendKeyValue("jql", searchStringDisplay.getText());
+			JiraApiHelper.getInstance().appendKeyValue("validateQuery", "warn");
+			JiraApiHelper.getInstance().appendKeyValue("maxResults", "500");
+			JiraApiHelper.getInstance().appendKeyValue("fields",
+					"worklog, key,customfield_10030,customfield_10031,customfield_10033,subtasks,summary");
+			JiraApiHelper.getInstance().appendKeyValue("startAt", String.valueOf(startAt));
+			json = JiraApiHelper.getInstance().sendRequest("GET", header);
+			worklogList.addAll(JiraParser.parseSearchResults(json));
+		}
 		worklogTable.revalidate();
 	}
 
@@ -407,14 +420,14 @@ public class MainFrame {
 				if (hasContent) {
 					buf.append(" and ");
 				}
-				buf.append("cf[10030] = ").append(ordernumber.getText()).append("");
+				buf.append("cf[10030] ~ ").append(ordernumber.getText()).append("");
 				hasContent = true;
 			}
 			if (!StringUtils.isEmpty(position.getText())) {
 				if (hasContent) {
 					buf.append(" and ");
 				}
-				buf.append("cf[10031] = ").append(position.getText()).append("");
+				buf.append("cf[10031] ~ ").append(position.getText()).append("");
 				hasContent = true;
 			}
 			// mandatory content

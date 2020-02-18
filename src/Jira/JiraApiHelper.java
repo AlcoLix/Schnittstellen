@@ -64,7 +64,6 @@ public class JiraApiHelper extends ApiHelper {
 		appendKeyValue("validateQuery", "warn");
 		appendKeyValue("fields", "key,customfield_10011");
 		appendKeyValue("jql", "type = Epic and category != Test");
-		appendKeyValue("maxResults", "100");
 		Hashtable<String, String> header = new Hashtable<String, String>();
 		// Der Auth-Header mit API-Token in base64 encoding
 		header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
