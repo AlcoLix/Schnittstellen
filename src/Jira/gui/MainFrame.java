@@ -8,6 +8,8 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
@@ -58,7 +60,7 @@ public class MainFrame {
 
 	private void initFrame() {
 		frame = new JFrame("Jira Auswertung");
-		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		initValues();
 		initMenuBar();
 		initContent();
@@ -84,7 +86,7 @@ public class MainFrame {
 		json = JiraApiHelper.getInstance().sendRequest("GET", header);
 		projects = JiraParser.parseProjects(json);
 
-		epics = JiraApiHelper.getInstance().queryEpics();
+		epics = JiraApiHelper.getInstance().queryEpics(null);
 	}
 
 	private void initMenuBar() {
@@ -213,6 +215,9 @@ public class MainFrame {
 			json = JiraApiHelper.getInstance().sendRequest("GET", header);
 			worklogList.addAll(JiraParser.parseSearchResults(json));
 		}
+		if(settingsDialog != null) {
+			worklogList = settingsDialog.applyFiltersToWorklogList(worklogList);
+		}
 		worklogTable.revalidate();
 	}
 
@@ -298,6 +303,23 @@ public class MainFrame {
 				project.addItem(projects[i]);
 			}
 			project.addKeyListener(listener);
+			project.addItemListener(new ItemListener() {
+				@Override
+				public void itemStateChanged(ItemEvent e) {
+					if(e.getStateChange()==ItemEvent.SELECTED) {
+						String selection = e.getItem().toString();
+						if(e.getItem().equals("Alle")) {
+							selection = "";
+						}
+						String[] epics = JiraApiHelper.getInstance().queryEpics(selection);
+						epic.removeAllItems();
+						epic.addItem("Alle");
+						for (int i = 0; i < epics.length; i++) {
+							epic.addItem(epics[i]);
+						}
+					}
+				}
+			});
 			c.gridy = 0;
 			c.gridx = 1;
 			add(project, c);
@@ -434,6 +456,37 @@ public class MainFrame {
 			buf.append("timespent > 0");
 			hasContent = true;
 			searchStringDisplay.setText(buf.toString());
+		}
+		/**
+		 * since the api filters the tickets, not the worklogs, we need to apply our filter settings to the worklogList
+		 * @param list
+		 */
+		private ArrayList<Worklog> applyFiltersToWorklogList(ArrayList<Worklog> list) {
+			ArrayList<Worklog> retval = new ArrayList<Worklog>(list.size());
+			for (Worklog worklog : list) {
+				boolean keep = true;
+				if (fromDate.getDate() != null) {
+					Date d = CalendarUtils.startOfDay(fromDate.getDate());
+					if(worklog.getDate().before(d)){
+						keep = false;
+					}
+				}
+				if (toDate.getDate() != null) {
+					Date d = CalendarUtils.endOfDay(toDate.getDate());
+					if(worklog.getDate().after(d)){
+						keep = false;
+					}
+				}
+				if (user.getSelectedIndex() > 0) {
+					if(!worklog.getUser().equalsIgnoreCase(user.getSelectedItem().toString())){
+						keep = false;
+					}
+				}
+				if(keep) {
+					retval.add(worklog);
+				}
+			}
+			return retval;
 		}
 	}
 

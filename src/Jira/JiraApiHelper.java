@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
 
+import Jira.utils.StringUtils;
 import main.ApiHelper;
 
 public class JiraApiHelper extends ApiHelper {
@@ -58,12 +59,21 @@ public class JiraApiHelper extends ApiHelper {
 		return this.sendRequest("GET", null);
 	}
 
-	public String[] queryEpics() {
+	/**
+	 * 
+	 * @param project can be null
+	 * @return all epics of the project or all epics if project is null
+	 */
+	public String[] queryEpics(String project) {
 		// Der Auth-Header kann noch einmal verwendet werden
 		setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
 		appendKeyValue("validateQuery", "warn");
 		appendKeyValue("fields", "key,customfield_10011");
-		appendKeyValue("jql", "type = Epic and category != Test");
+		if(StringUtils.isEmpty(project)) {
+			appendKeyValue("jql", "type = Epic and category != Test");
+		}else {
+			appendKeyValue("jql", "type = Epic and category != Test and project = \""+project+"\"");
+		}
 		Hashtable<String, String> header = new Hashtable<String, String>();
 		// Der Auth-Header mit API-Token in base64 encoding
 		header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
@@ -76,7 +86,11 @@ public class JiraApiHelper extends ApiHelper {
 			setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
 			appendKeyValue("validateQuery", "warn");
 			appendKeyValue("fields", "key,customfield_10011");
-			appendKeyValue("jql", "type = Epic and category != Test");
+			if(StringUtils.isEmpty(project)) {
+				appendKeyValue("jql", "type = Epic and category != Test");
+			}else {
+				appendKeyValue("jql", "type = Epic and category != Test and project = \""+project+"\"");
+			}
 			appendKeyValue("maxResults", "100");
 			appendKeyValue("startAt", String.valueOf(startAt));
 			json = JiraApiHelper.getInstance().sendRequest("GET", header);
