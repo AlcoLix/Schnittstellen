@@ -42,6 +42,7 @@ import javax.swing.table.AbstractTableModel;
 import Jira.JiraApiHelper;
 import Jira.JiraParser;
 import Jira.Worklog;
+import Jira.utils.CalendarUtils;
 import Jira.utils.GuiUtils;
 import Jira.utils.StringUtils;
 
@@ -383,24 +384,17 @@ public class MainFrame {
 				if (hasContent) {
 					buf.append(" and ");
 				}
-				buf.append("worklogdate >= \"").append(c.get(Calendar.YEAR)).append("/")
-						.append(c.get(Calendar.MONTH) + 1).append("/").append(c.get(Calendar.DAY_OF_MONTH))
-						.append("\"");
+				buf.append("worklogdate >= \"").append(CalendarUtils.getStringToCalendarForREST(c)).append("\"");
 				hasContent = true;
 			}
 			if (toDate.getDate() != null) {
-				Date d = fromDate.getDate();
+				Date d = toDate.getDate();
 				Calendar c = Calendar.getInstance();
 				c.setTime(d);
 				if (hasContent) {
 					buf.append(" and ");
 				}
-				if (hasContent) {
-					buf.append(" and ");
-				}
-				buf.append("worklogdate <= \"").append(c.get(Calendar.YEAR)).append("/")
-						.append(c.get(Calendar.MONTH) + 1).append("/").append(c.get(Calendar.DAY_OF_MONTH))
-						.append("\"");
+				buf.append("worklogdate <= \"").append(CalendarUtils.getStringToCalendarForREST(c)).append("\"");
 				hasContent = true;
 			}
 			if (user.getSelectedIndex() > 0) {

@@ -227,6 +227,27 @@ public class CalendarUtils {
 		c.set(Integer.parseInt(s), 0, 1, 0, 0, 0);
 		return c.getTime();
 	}
+	public static String getStringToCalendarForREST(Calendar c) {
+		if(c == null){
+			c = Calendar.getInstance();
+		}
+		StringBuffer buf = new StringBuffer();
+
+		buf.append(c.get(Calendar.YEAR));
+		buf.append("/");
+		int m = c.get(Calendar.MONTH) + 1;
+		if(m<10){
+			buf.append("0");
+		}
+		buf.append(m).append("/");
+	
+		int d = c.get(Calendar.DAY_OF_MONTH);
+		if(d<10){
+			buf.append("0");
+		}
+		buf.append(d);
+		return buf.toString();
+	}
 	public static String getStringToCalendar(Calendar c, boolean year, boolean month,
 			boolean day, boolean hour, boolean minute, boolean second, boolean millis) {
 		if(c == null){
