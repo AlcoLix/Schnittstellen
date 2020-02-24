@@ -15,6 +15,9 @@ import main.ApiHelper;
 
 public class JiraApiHelper extends ApiHelper {
 
+	public static final String FIELDS_FOR_TASKS = "worklog, key,customfield_10030,customfield_10031,customfield_10033,subtasks,summary,project,customfield_10014";
+	public static final String FIELDS_FOR_SUBTASKS = "worklog, key,customfield_10030,customfield_10031,customfield_10033,summary,project,parent";
+	
 	/**
 	 * sendet den Request mit den eingewstellten Parametern. der urlString muss gesetzt sein!
 	 * @param type GET oder POST

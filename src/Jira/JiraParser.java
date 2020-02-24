@@ -23,22 +23,32 @@ public class JiraParser {
 			//query the worklogs of the subtasks, if any
 			JSONObject fields = issue.getJSONObject("fields");
 			JSONArray subtasks = fields.getJSONArray("subtasks");
+			String epic = "";
+			try { 
+				epic = fields.getString("customfield_10014");
+			} catch (JSONException e) {
+				
+			}
 			for (Object sub : subtasks) {
 				JSONObject subtask = (JSONObject) sub;
-				retval.addAll(queryAndParseSubtask(subtask.getString("self")));
+				retval.addAll(queryAndParseSubtask(subtask.getString("self"),epic));
 			}
 		}
 		return retval;
 	}
-	public static ArrayList<Worklog> queryAndParseSubtask(String subtaskSelflink) {
+	public static ArrayList<Worklog> queryAndParseSubtask(String subtaskSelflink, String epic) {
 		JiraApiHelper.getInstance().setBaseString(subtaskSelflink);
-		JiraApiHelper.getInstance().appendKeyValue("fields", "worklog, key,customfield_10030,customfield_10031,customfield_10033,summary");
+		JiraApiHelper.getInstance().appendKeyValue("fields", JiraApiHelper.FIELDS_FOR_SUBTASKS);
 		Hashtable<String, String> header = new Hashtable<String, String>();
 		// Der Auth-Header mit API-Token in base64 encoding
 		header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
 		StringBuffer json = JiraApiHelper.getInstance().sendRequest("GET", header);
 		JSONObject issue = new JSONObject(json.toString());
-		return  parseWorklogFromIssueObject( issue);
+		ArrayList<Worklog> worklogs =  parseWorklogFromIssueObject( issue);
+		for (Worklog worklog : worklogs) {
+			worklog.setEpic(epic);
+		}
+		return worklogs;
 	}
 	public static ArrayList<Worklog> parseWorklogFromIssueObject(JSONObject issue) {
 		ArrayList<Worklog>retval = new ArrayList<Worklog>();
@@ -76,6 +86,25 @@ public class JiraParser {
 		} catch (JSONException e) {
 			
 		}
+		String epic = "";
+		try { 
+			epic = fields.getString("customfield_10014");
+		} catch (JSONException e) {
+			
+		}
+		String project = "";
+		try { 
+			project = fields.getJSONObject("project").getString("name");
+		} catch (JSONException e) {
+			
+		}
+		String parent = "";
+		try { 
+			parent = fields.getJSONObject("parent").getString("key");
+		} catch (JSONException e) {
+			
+		}
+		
 		for (Object object2 : worklogs) {
 			Worklog jiraWorklog = new Worklog();
 			JSONObject log = (JSONObject) object2;
@@ -108,6 +137,9 @@ public class JiraParser {
 			jiraWorklog.setOrderposition(orderposition);
 			jiraWorklog.setCustomer(customer);
 			jiraWorklog.setSummary(summary);
+			jiraWorklog.setProject(project);
+			jiraWorklog.setEpic(epic);
+			jiraWorklog.setParent(parent);
 			retval.add(jiraWorklog);
 		}
 		return retval;
@@ -179,6 +211,9 @@ public class JiraParser {
 		csvString.append("Position").append(";");
 		csvString.append("Kunde").append(";");
 		csvString.append("Ticketname").append(";");
+		csvString.append("Projekt").append(";");
+		csvString.append("Epic").append(";");
+		csvString.append("Mutterticket").append(";");
 		csvString.append("Zeit in Sekunden").append("\r\n");
 		for (Worklog worklog : worklogs) {
 			csvString.append(worklog.getUser()).append(";");
@@ -191,6 +226,9 @@ public class JiraParser {
 			csvString.append(worklog.getOrderposition()).append(";");
 			csvString.append(worklog.getCustomer()).append(";");
 			csvString.append(worklog.getSummary()).append(";");
+			csvString.append(worklog.getProject()).append(";");
+			csvString.append(worklog.getEpic()).append(";");
+			csvString.append(worklog.getParent()).append(";");
 			csvString.append(worklog.getTimeSpentSeconds()).append("\r\n");
 		}
 		return csvString;

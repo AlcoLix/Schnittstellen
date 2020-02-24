@@ -12,6 +12,29 @@ public class Worklog {
 	private String ordernumber;
 	private String orderposition;
 	private String summary;
+	private String parent;
+	private String epic;
+	private String project;
+	
+	public String getParent() {
+		return parent;
+	}
+	public void setParent(String parent) {
+		this.parent = parent;
+	}
+	public String getEpic() {
+		return epic;
+	}
+	public void setEpic(String epic) {
+		this.epic = epic;
+	}
+	public String getProject() {
+		return project;
+	}
+	public void setProject(String project) {
+		this.project = project;
+	}
+	
 	public String getSummary() {
 		return summary;
 	}

@@ -171,9 +171,12 @@ public class MainFrame {
 		worklogTable.getColumnModel().getColumn(6).setPreferredWidth(50);
 		worklogTable.getColumnModel().getColumn(7).setPreferredWidth(200);
 		worklogTable.getColumnModel().getColumn(8).setPreferredWidth(200);
+		worklogTable.getColumnModel().getColumn(9).setPreferredWidth(75);
+		worklogTable.getColumnModel().getColumn(10).setPreferredWidth(75);
+		worklogTable.getColumnModel().getColumn(11).setPreferredWidth(75);
 		JScrollPane scrollPane = new JScrollPane(worklogTable);
-		scrollPane.setPreferredSize(new Dimension(925, 600));
-		scrollPane.setMinimumSize(new Dimension(925, 600));
+		scrollPane.setPreferredSize(new Dimension(1150, 600));
+		scrollPane.setMinimumSize(new Dimension(1150, 600));
 		center.add(scrollPane);
 
 	}
@@ -196,26 +199,24 @@ public class MainFrame {
 		JiraApiHelper.getInstance().appendKeyValue("jql", searchStringDisplay.getText());
 		JiraApiHelper.getInstance().appendKeyValue("validateQuery", "warn");
 		JiraApiHelper.getInstance().appendKeyValue("maxResults", "500");
-		JiraApiHelper.getInstance().appendKeyValue("fields",
-				"worklog, key,customfield_10030,customfield_10031,customfield_10033,subtasks,summary");
+		JiraApiHelper.getInstance().appendKeyValue("fields", JiraApiHelper.FIELDS_FOR_TASKS);
 		Hashtable<String, String> header = new Hashtable<String, String>();
 		// Der Auth-Header mit API-Token in base64 encoding
 		header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
 		StringBuffer json = JiraApiHelper.getInstance().sendRequest("GET", header);
 		worklogList = JiraParser.parseSearchResults(json);
 		int startAt = 0;
-		while((startAt = JiraParser.nextStartAt(json))!=-1) {
+		while ((startAt = JiraParser.nextStartAt(json)) != -1) {
 			JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
 			JiraApiHelper.getInstance().appendKeyValue("jql", searchStringDisplay.getText());
 			JiraApiHelper.getInstance().appendKeyValue("validateQuery", "warn");
 			JiraApiHelper.getInstance().appendKeyValue("maxResults", "500");
-			JiraApiHelper.getInstance().appendKeyValue("fields",
-					"worklog, key,customfield_10030,customfield_10031,customfield_10033,subtasks,summary");
+			JiraApiHelper.getInstance().appendKeyValue("fields", JiraApiHelper.FIELDS_FOR_TASKS);
 			JiraApiHelper.getInstance().appendKeyValue("startAt", String.valueOf(startAt));
 			json = JiraApiHelper.getInstance().sendRequest("GET", header);
 			worklogList.addAll(JiraParser.parseSearchResults(json));
 		}
-		if(settingsDialog != null) {
+		if (settingsDialog != null) {
 			worklogList = settingsDialog.applyFiltersToWorklogList(worklogList);
 		}
 		worklogTable.revalidate();
@@ -232,19 +233,21 @@ public class MainFrame {
 	private void exportToFile() {
 		if (worklogList.size() > 0) {
 			try {
-				String s = JOptionPane.showInputDialog(frame, "Dateiname angeben (ohne Endung)", "Exportdate speichern", JOptionPane.QUESTION_MESSAGE);
-				if(!StringUtils.isEmpty(s)) {
+				String s = JOptionPane.showInputDialog(frame, "Dateiname angeben (ohne Endung)", "Exportdate speichern",
+						JOptionPane.QUESTION_MESSAGE);
+				if (!StringUtils.isEmpty(s)) {
 					StringBuffer buf = JiraParser.parseWorklogsToCsvString(worklogList);
 					File f = new File("latest.csv");
-					FileWriter writer = new FileWriter(f,false);
+					FileWriter writer = new FileWriter(f, false);
 					writer.write(buf.toString());
 					writer.close();
-					f = new File(s.split("\\.")[0]+".csv");
-					writer = new FileWriter(f,false);
+					f = new File(s.split("\\.")[0] + ".csv");
+					writer = new FileWriter(f, false);
 					writer.write(buf.toString());
 					writer.close();
 					JOptionPane.showInternalMessageDialog(frame.getContentPane(),
-							"Datei " + f.getCanonicalPath() + " wurde gespeichert", "Datenexport", JOptionPane.INFORMATION_MESSAGE);					
+							"Datei " + f.getCanonicalPath() + " wurde gespeichert", "Datenexport",
+							JOptionPane.INFORMATION_MESSAGE);
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -306,9 +309,9 @@ public class MainFrame {
 			project.addItemListener(new ItemListener() {
 				@Override
 				public void itemStateChanged(ItemEvent e) {
-					if(e.getStateChange()==ItemEvent.SELECTED) {
+					if (e.getStateChange() == ItemEvent.SELECTED) {
 						String selection = e.getItem().toString();
-						if(e.getItem().equals("Alle")) {
+						if (e.getItem().equals("Alle")) {
 							selection = "";
 						}
 						String[] epics = JiraApiHelper.getInstance().queryEpics(selection);
@@ -457,8 +460,11 @@ public class MainFrame {
 			hasContent = true;
 			searchStringDisplay.setText(buf.toString());
 		}
+
 		/**
-		 * since the api filters the tickets, not the worklogs, we need to apply our filter settings to the worklogList
+		 * since the api filters the tickets, not the worklogs, we need to apply our
+		 * filter settings to the worklogList
+		 * 
 		 * @param list
 		 */
 		private ArrayList<Worklog> applyFiltersToWorklogList(ArrayList<Worklog> list) {
@@ -467,22 +473,22 @@ public class MainFrame {
 				boolean keep = true;
 				if (fromDate.getDate() != null) {
 					Date d = CalendarUtils.startOfDay(fromDate.getDate());
-					if(worklog.getDate().before(d)){
+					if (worklog.getDate().before(d)) {
 						keep = false;
 					}
 				}
 				if (toDate.getDate() != null) {
 					Date d = CalendarUtils.endOfDay(toDate.getDate());
-					if(worklog.getDate().after(d)){
+					if (worklog.getDate().after(d)) {
 						keep = false;
 					}
 				}
 				if (user.getSelectedIndex() > 0) {
-					if(!worklog.getUser().equalsIgnoreCase(user.getSelectedItem().toString())){
+					if (!worklog.getUser().equalsIgnoreCase(user.getSelectedItem().toString())) {
 						keep = false;
 					}
 				}
-				if(keep) {
+				if (keep) {
 					retval.add(worklog);
 				}
 			}
@@ -494,7 +500,7 @@ public class MainFrame {
 	private class WorklogTableModel extends AbstractTableModel {
 		@Override
 		public int getColumnCount() {
-			return 9;
+			return 12;
 		}
 
 		@Override
@@ -524,6 +530,12 @@ public class MainFrame {
 				return worklogList.get(rowIndex).getCustomer();
 			case 8:
 				return worklogList.get(rowIndex).getSummary();
+			case 9:
+				return worklogList.get(rowIndex).getProject();
+			case 10:
+				return worklogList.get(rowIndex).getEpic();
+			case 11:
+				return worklogList.get(rowIndex).getParent();
 			}
 			return "";
 		}
@@ -549,6 +561,12 @@ public class MainFrame {
 				return "Kunde";
 			case 8:
 				return "Ticketname";
+			case 9:
+				return "Projekt";
+			case 10:
+				return "Epic";
+			case 11:
+				return "Mutterticket";
 			}
 			return "";
 		}
