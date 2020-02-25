@@ -178,7 +178,6 @@ public class MainFrame {
 		scrollPane.setPreferredSize(new Dimension(1150, 600));
 		scrollPane.setMinimumSize(new Dimension(1150, 600));
 		center.add(scrollPane);
-
 	}
 
 	private void startSearch() {
@@ -434,7 +433,7 @@ public class MainFrame {
 					buf.append(" and ");
 				}
 				String epicKey = epic.getSelectedItem().toString();
-				epicKey = epicKey.substring(0, epicKey.indexOf(" | "));
+				epicKey = epicKey.substring(0, epicKey.indexOf(" - "));
 				buf.append("\"Epic Link\" = \"").append(epicKey).append("\"");
 				hasContent = true;
 			}

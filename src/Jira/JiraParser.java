@@ -26,6 +26,7 @@ public class JiraParser {
 			String epic = "";
 			try { 
 				epic = fields.getString("customfield_10014");
+				epic = Epic.getEpic(epic).toString();
 			} catch (JSONException e) {
 				
 			}
@@ -49,6 +50,17 @@ public class JiraParser {
 			worklog.setEpic(epic);
 		}
 		return worklogs;
+	}
+	public static String parseNameForSingleTicket(StringBuffer json) {
+		JSONObject issue = new JSONObject(json.toString());
+		JSONObject fields = issue.getJSONObject("fields");
+		String name ="";
+		try { 
+			name = fields.getString("summary");
+		} catch (JSONException e) {
+			
+		}
+		return name;
 	}
 	public static ArrayList<Worklog> parseWorklogFromIssueObject(JSONObject issue) {
 		ArrayList<Worklog>retval = new ArrayList<Worklog>();
@@ -89,6 +101,7 @@ public class JiraParser {
 		String epic = "";
 		try { 
 			epic = fields.getString("customfield_10014");
+			epic = Epic.getEpic(epic).toString();
 		} catch (JSONException e) {
 			
 		}
@@ -171,19 +184,21 @@ public class JiraParser {
 		String[] retval = new String[projects.size()];
 		return projects.toArray(retval);
 	}
-	public static String[] parseEpics(StringBuffer json) {
+	/**
+	 * parses the Epics and adds them to the static List in Epic
+	 * @param json the Epics in JSON format
+	 */
+	public static void parseEpics(StringBuffer json) {
 		JSONObject content = new JSONObject(json.toString());
-		ArrayList<String> epics = new ArrayList<String>(content.getInt("total"));
 		JSONArray values = content.getJSONArray("issues");
 		for (Object object : values) {
 			JSONObject value = (JSONObject) object;
-			StringBuffer entry = new StringBuffer(value.getString("key"));
-			entry.append(" | ").append(value.getJSONObject("fields").getString("customfield_10011"));
-			epics.add(entry.toString());
+			Epic e = new Epic();
+			e.setKey(value.getString("key"));
+			e.setName(value.getJSONObject("fields").getString("customfield_10011"));
+			e.setProject(value.getJSONObject("fields").getJSONObject("project").getString("name"));
+			Epic.addEpic(e);
 		}
-		Collections.sort(epics);
-		String[] retval = new String[epics.size()];
-		return epics.toArray(retval);
 	}
 	/**
 	 * In case there are more results available than are to be returned per call 
