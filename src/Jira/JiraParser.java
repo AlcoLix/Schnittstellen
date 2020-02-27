@@ -219,6 +219,7 @@ public class JiraParser {
 		StringBuffer csvString = new StringBuffer();
 		csvString.append("Mitarbeiter").append(";");
 		csvString.append("Datum").append(";");
+		csvString.append("Uhrzeit").append(";");
 		csvString.append("Zeit").append(";");
 		csvString.append("Ticket").append(";");
 		csvString.append("Bemerkung").append(";");
@@ -232,7 +233,9 @@ public class JiraParser {
 		csvString.append("Zeit in Sekunden").append("\r\n");
 		for (Worklog worklog : worklogs) {
 			csvString.append(worklog.getUser()).append(";");
-			SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+			SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy");
+			csvString.append(format.format(worklog.getDate())).append(";");
+			format = new SimpleDateFormat("HH:mm:ss");
 			csvString.append(format.format(worklog.getDate())).append(";");
 			csvString.append(worklog.getTimeSpent()).append(";");
 			csvString.append(worklog.getIssueKey()).append(";");
