@@ -72,18 +72,15 @@ public class MainFrame {
 	 * gets the values for ComboBoxes (users and projects) from the REST API
 	 */
 	private void initValues() {
-		//
-		JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/group/member");
-		JiraApiHelper.getInstance().appendKeyValue("groupname", "jira-software-users");
+		
+		users = JiraApiHelper.getInstance().queryUsers();
+				
+
+		JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/project/search");
 		Hashtable<String, String> header = new Hashtable<String, String>();
 		// Der Auth-Header mit API-Token in base64 encoding
 		header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
 		StringBuffer json = JiraApiHelper.getInstance().sendRequest("GET", header);
-		users = JiraParser.parseUsers(json);
-
-		JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/project/search");
-		// Der Auth-Header kann noch einmal verwendet werden
-		json = JiraApiHelper.getInstance().sendRequest("GET", header);
 		projects = JiraParser.parseProjects(json);
 
 		epics = JiraApiHelper.getInstance().queryEpics(null);
@@ -472,13 +469,13 @@ public class MainFrame {
 				boolean keep = true;
 				if (fromDate.getDate() != null) {
 					Date d = CalendarUtils.startOfDay(fromDate.getDate());
-					if (worklog.getDate().before(d)) {
+					if (worklog.getDate().before(d)&&!CalendarUtils.isSameDay(d, worklog.getDate())) {
 						keep = false;
 					}
 				}
 				if (toDate.getDate() != null) {
 					Date d = CalendarUtils.endOfDay(toDate.getDate());
-					if (worklog.getDate().after(d)) {
+					if (worklog.getDate().after(d)&&!CalendarUtils.isSameDay(d, worklog.getDate())) {
 						keep = false;
 					}
 				}

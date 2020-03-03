@@ -6,6 +6,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Hashtable;
 
 import main.ApiHelper;
@@ -91,6 +93,27 @@ public class JiraApiHelper extends ApiHelper {
 		} 
 		//When the epics are initialized, return the saved values
 		return Epic.getEpicStringsByProject(project);
+	}
+	
+	public String[] queryUsers() {
+		setBaseString("https://partsolution.atlassian.net/rest/api/latest/group/member");
+		appendKeyValue("groupname", "jira-software-users");
+		Hashtable<String, String> header = new Hashtable<String, String>();
+		// Der Auth-Header mit API-Token in base64 encoding
+		header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
+		StringBuffer json = JiraApiHelper.getInstance().sendRequest("GET", header);
+		ArrayList<String> users = JiraParser.parseUsers(json);
+		int startAt = 0;
+		while((startAt = JiraParser.nextStartAt(json))!=-1) {
+			setBaseString("https://partsolution.atlassian.net/rest/api/latest/group/member");
+			appendKeyValue("groupname", "jira-software-users");
+			appendKeyValue("startAt", String.valueOf(startAt));
+			json = JiraApiHelper.getInstance().sendRequest("GET", header);
+			users.addAll( JiraParser.parseUsers(json));
+		}
+		Collections.sort(users);
+		String[] retval = new String[users.size()];
+		return users.toArray(retval);
 	}
 	/*
 	 * Methode, die den urlString zusammensetzt, Verknüpfung aller Methoden zu einer Methode

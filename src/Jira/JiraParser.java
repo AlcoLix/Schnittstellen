@@ -101,6 +101,9 @@ public class JiraParser {
 		String epic = "";
 		try { 
 			epic = fields.getString("customfield_10014");
+			if(Epic.getEpic(epic) == null) {
+				System.out.println("Error with "+epic);
+			}
 			epic = Epic.getEpic(epic).toString();
 		} catch (JSONException e) {
 			
@@ -157,7 +160,7 @@ public class JiraParser {
 		}
 		return retval;
 	}
-	public static String[] parseUsers(StringBuffer json) {
+	public static ArrayList<String> parseUsers(StringBuffer json) {
 		//Pagination must be added in case there are more than 50 users
 		JSONObject content = new JSONObject(json.toString());
 		ArrayList<String> users = new ArrayList<String>(content.getInt("total"));
@@ -168,9 +171,7 @@ public class JiraParser {
 				users.add(value.getString("displayName"));
 			}
 		}
-		Collections.sort(users);
-		String[] retval = new String[users.size()];
-		return users.toArray(retval);
+		return users;
 	}
 	public static String[] parseProjects(StringBuffer json) {
 		JSONObject content = new JSONObject(json.toString());
