@@ -57,6 +57,7 @@ public class MainFrame {
 	private SettingsDialog settingsDialog;
 	private JTable worklogTable;
 	private ArrayList<Worklog> worklogList = new ArrayList<Worklog>();
+	private Thread searchThread;
 
 	private void initFrame() {
 		frame = new JFrame("Jira Auswertung");
@@ -100,7 +101,7 @@ public class MainFrame {
 			}
 		});
 		data.add(settings);
-		JMenuItem search = new JMenuItem("Suchen");
+		JMenuItem search = new JMenuItem("Suche starten");
 		search.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
 		search.addActionListener(new ActionListener() {
 			@Override
@@ -178,44 +179,43 @@ public class MainFrame {
 	}
 
 	private void startSearch() {
-		/*
-		 * JiraApiHelper.getInstance().setBaseString(
-		 * "https://partsolution.atlassian.net/rest/api/latest/search");
-		 * JiraApiHelper.getInstance().appendKeyValue("jql",
-		 * "project = SBOS AND text ~ \"KW Bader\"");
-		 * JiraApiHelper.getInstance().appendKeyValue("validateQuery", "warn");
-		 * JiraApiHelper.getInstance().appendKeyValue("fields", "worklog, key");
-		 * Hashtable<String, String> header = new Hashtable<String, String>();
-		 * header.put("Authorization",
-		 * "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
-		 * //Der Auth-Header mit API-Token in base64 encoding
-		 * JiraApiHelper.getInstance().sendRequest("GET", header);
-		 */
-		JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
-		JiraApiHelper.getInstance().appendKeyValue("jql", searchStringDisplay.getText());
-		JiraApiHelper.getInstance().appendKeyValue("validateQuery", "warn");
-		JiraApiHelper.getInstance().appendKeyValue("maxResults", "500");
-		JiraApiHelper.getInstance().appendKeyValue("fields", JiraApiHelper.FIELDS_FOR_TASKS);
-		Hashtable<String, String> header = new Hashtable<String, String>();
-		// Der Auth-Header mit API-Token in base64 encoding
-		header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
-		StringBuffer json = JiraApiHelper.getInstance().sendRequest("GET", header);
-		worklogList = JiraParser.parseSearchResults(json);
-		int startAt = 0;
-		while ((startAt = JiraParser.nextStartAt(json)) != -1) {
-			JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
-			JiraApiHelper.getInstance().appendKeyValue("jql", searchStringDisplay.getText());
-			JiraApiHelper.getInstance().appendKeyValue("validateQuery", "warn");
-			JiraApiHelper.getInstance().appendKeyValue("maxResults", "500");
-			JiraApiHelper.getInstance().appendKeyValue("fields", JiraApiHelper.FIELDS_FOR_TASKS);
-			JiraApiHelper.getInstance().appendKeyValue("startAt", String.valueOf(startAt));
-			json = JiraApiHelper.getInstance().sendRequest("GET", header);
-			worklogList.addAll(JiraParser.parseSearchResults(json));
+		if(searchThread!=null&&searchThread.isAlive()) {
+			//Maybe we need a way to kill older search Threads, this should be done here
 		}
-		if (settingsDialog != null) {
-			worklogList = settingsDialog.applyFiltersToWorklogList(worklogList);
-		}
-		worklogTable.revalidate();
+		searchThread = new Thread() {
+			@Override
+			public void run() {
+				String title = frame.getTitle();
+				frame.setTitle(title+" ...Suche läuft...");
+				JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
+				JiraApiHelper.getInstance().appendKeyValue("jql", searchStringDisplay.getText());
+				JiraApiHelper.getInstance().appendKeyValue("validateQuery", "warn");
+				JiraApiHelper.getInstance().appendKeyValue("maxResults", "500");
+				JiraApiHelper.getInstance().appendKeyValue("fields", JiraApiHelper.FIELDS_FOR_TASKS);
+				Hashtable<String, String> header = new Hashtable<String, String>();
+				// Der Auth-Header mit API-Token in base64 encoding
+				header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
+				StringBuffer json = JiraApiHelper.getInstance().sendRequest("GET", header);
+				worklogList = JiraParser.parseSearchResults(json);
+				int startAt = 0;
+				while ((startAt = JiraParser.nextStartAt(json)) != -1) {
+					JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
+					JiraApiHelper.getInstance().appendKeyValue("jql", searchStringDisplay.getText());
+					JiraApiHelper.getInstance().appendKeyValue("validateQuery", "warn");
+					JiraApiHelper.getInstance().appendKeyValue("maxResults", "500");
+					JiraApiHelper.getInstance().appendKeyValue("fields", JiraApiHelper.FIELDS_FOR_TASKS);
+					JiraApiHelper.getInstance().appendKeyValue("startAt", String.valueOf(startAt));
+					json = JiraApiHelper.getInstance().sendRequest("GET", header);
+					worklogList.addAll(JiraParser.parseSearchResults(json));
+				}
+				if (settingsDialog != null) {
+					worklogList = settingsDialog.applyFiltersToWorklogList(worklogList);
+				}
+				worklogTable.revalidate();
+				frame.setTitle(title);
+			}
+		};
+		searchThread.start();
 	}
 
 	private void openSettingsDialog() {
@@ -455,6 +455,7 @@ public class MainFrame {
 			buf.append("timespent > 0");
 			hasContent = true;
 			searchStringDisplay.setText(buf.toString());
+			startSearch();
 		}
 
 		/**
