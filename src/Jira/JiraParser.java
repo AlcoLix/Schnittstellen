@@ -11,6 +11,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import Jira.utils.StringUtils;
+
 public class JiraParser {
 
 	public static ArrayList<Worklog> parseSearchResults(StringBuffer json) {
@@ -19,7 +21,7 @@ public class JiraParser {
 		JSONArray issues = content.getJSONArray("issues");
 		for (Object object : issues) {
 			JSONObject issue = (JSONObject) object;
-			retval.addAll(parseWorklogFromIssueObject(issue));
+			retval.addAll(parseWorklogsFromIssueObject(issue));
 			//query the worklogs of the subtasks, if any
 			JSONObject fields = issue.getJSONObject("fields");
 			JSONArray subtasks = fields.getJSONArray("subtasks");
@@ -45,9 +47,24 @@ public class JiraParser {
 		header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
 		StringBuffer json = JiraApiHelper.getInstance().sendRequest("GET", header);
 		JSONObject issue = new JSONObject(json.toString());
-		ArrayList<Worklog> worklogs =  parseWorklogFromIssueObject( issue);
+		ArrayList<Worklog> worklogs =  parseWorklogsFromIssueObject( issue);
 		for (Worklog worklog : worklogs) {
 			worklog.setEpic(epic);
+			//Fallback, if the Ordernumber is only set in the Epic
+			String ordernumber = "";
+			if(StringUtils.isEmpty(worklog.getOrdernumber())) {
+				ordernumber = Epic.getEpic(epic).getOrdernumber();
+			}
+			String orderposition = "";
+			if(StringUtils.isEmpty(worklog.getOrderposition())) {
+				orderposition = Epic.getEpic(epic).getOrderposition();
+			}
+			if(StringUtils.isEmpty(worklog.getOrdernumber())) {
+				worklog.setOrdernumber(ordernumber);
+			}
+			if(StringUtils.isEmpty(worklog.getOrderposition())) {
+				worklog.setOrderposition(orderposition);
+			}
 		}
 		return worklogs;
 	}
@@ -62,14 +79,18 @@ public class JiraParser {
 		}
 		return name;
 	}
-	public static ArrayList<Worklog> parseWorklogFromIssueObject(JSONObject issue) {
+	public static ArrayList<Worklog> parseWorklogsFromIssueObject(JSONObject issue) {
 		ArrayList<Worklog>retval = new ArrayList<Worklog>();
 		String key = issue.getString("key");
 		JSONObject fields = issue.getJSONObject("fields");
 		JSONObject worklog = fields.getJSONObject("worklog");
+		if(worklog.getInt("total")>worklog.getInt("maxResults")) {
+			StringBuffer json = JiraApiHelper.getInstance().getWorklogsArray2Issue(key);
+			worklog = new JSONObject(json.toString());
+		}
 		JSONArray worklogs = worklog.getJSONArray("worklogs");
 		String ordernumber ="";
-		try { 
+		try {
 			ordernumber= fields.getString("customfield_10030");
 		} catch (JSONException e) {
 			
@@ -105,6 +126,13 @@ public class JiraParser {
 				System.out.println("Error with "+epic);
 			}
 			epic = Epic.getEpic(epic).toString();
+			if(StringUtils.isEmpty(ordernumber)) {
+				//Fallback, if the Ordernumber is only set in the Epic
+				ordernumber = Epic.getEpic(epic).getOrdernumber();
+			}
+			if(StringUtils.isEmpty(orderposition)) {
+				orderposition = Epic.getEpic(epic).getOrderposition();
+			}
 		} catch (JSONException e) {
 			
 		}
@@ -198,6 +226,20 @@ public class JiraParser {
 			e.setKey(value.getString("key"));
 			e.setName(value.getJSONObject("fields").getString("customfield_10011"));
 			e.setProject(value.getJSONObject("fields").getJSONObject("project").getString("name"));
+			String ordernumber ="";
+			try { 
+				ordernumber= value.getJSONObject("fields").getString("customfield_10030");
+			} catch (JSONException ex) {
+				
+			}
+			e.setOrdernumber(ordernumber);
+			String orderposition = "";
+			try { 
+				orderposition = value.getJSONObject("fields").getString("customfield_10031");
+			} catch (JSONException ex) {
+				
+			}
+			e.setOrderposition(orderposition);
 			Epic.addEpic(e);
 		}
 	}

@@ -8,7 +8,11 @@ public class Epic {
 	private String name;
 	private String key;
 	private String project;
+	private String ordernumber;
+	private String orderposition;
+	
 	private static ArrayList<Epic> list = new ArrayList<Epic>();
+	
 	public static int getEpicCount() {
 		if(list == null) {
 			return 0;
@@ -41,6 +45,9 @@ public class Epic {
 			if(epic.getName().equalsIgnoreCase(keyOrName)) {
 				return epic;
 			}
+			if(epic.toString().equalsIgnoreCase(keyOrName)) {
+				return epic;
+			}
 		}
 		return null;
 	}
@@ -69,6 +76,18 @@ public class Epic {
 	}
 	public String toString() {
 		return getKey()+" - "+getName();
+	}
+	public String getOrdernumber() {
+		return ordernumber;
+	}
+	public void setOrdernumber(String ordernumber) {
+		this.ordernumber = ordernumber;
+	}
+	public String getOrderposition() {
+		return orderposition;
+	}
+	public void setOrderposition(String orderposition) {
+		this.orderposition = orderposition;
 	}
 	
 }

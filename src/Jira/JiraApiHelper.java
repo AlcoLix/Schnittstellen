@@ -14,8 +14,9 @@ import main.ApiHelper;
 
 public class JiraApiHelper extends ApiHelper {
 
-	public static final String FIELDS_FOR_TASKS = "worklog, key,customfield_10030,customfield_10031,customfield_10033,subtasks,summary,project,customfield_10014";
-	public static final String FIELDS_FOR_SUBTASKS = "worklog, key,customfield_10030,customfield_10031,customfield_10033,summary,project,parent";
+	public static final String FIELDS_FOR_TASKS = "worklog, key,customfield_10030,customfield_10031,customfield_10033,subtasks,summary,project,customfield_10014,components,creator,assignee";
+	public static final String FIELDS_FOR_SUBTASKS = "worklog, key,customfield_10030,customfield_10031,customfield_10033,summary,project,parent,components,creator,assignee";
+	public static final String FIELDS_FOR_EPICS = "key,customfield_10011,customfield_10030,customfield_10031,project";
 		
 	/**
 	 * sendet den Request mit den eingewstellten Parametern. der urlString muss gesetzt sein!
@@ -71,7 +72,7 @@ public class JiraApiHelper extends ApiHelper {
 			//Initialize the epics
 			setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
 			appendKeyValue("validateQuery", "warn");
-			appendKeyValue("fields", "key,customfield_10011,project");
+			appendKeyValue("fields", FIELDS_FOR_EPICS);
 			appendKeyValue("jql", "type = Epic and category != Test");
 			Hashtable<String, String> header = new Hashtable<String, String>();
 			// Der Auth-Header mit API-Token in base64 encoding
@@ -83,7 +84,7 @@ public class JiraApiHelper extends ApiHelper {
 			while((startAt = JiraParser.nextStartAt(json))!=-1) {
 				setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
 				appendKeyValue("validateQuery", "warn");
-				appendKeyValue("fields", "key,customfield_10011,project");
+				appendKeyValue("fields", FIELDS_FOR_EPICS);
 				appendKeyValue("jql", "type = Epic and category != Test");
 				appendKeyValue("maxResults", "100");
 				appendKeyValue("startAt", String.valueOf(startAt));
@@ -93,6 +94,15 @@ public class JiraApiHelper extends ApiHelper {
 		} 
 		//When the epics are initialized, return the saved values
 		return Epic.getEpicStringsByProject(project);
+	}
+	public StringBuffer getWorklogsArray2Issue(String IssueKey) {
+		setBaseString("https://partsolution.atlassian.net/rest/api/latest/issue/"+IssueKey+"/worklog");
+		Hashtable<String, String> header = new Hashtable<String, String>();
+		// Der Auth-Header mit API-Token in base64 encoding
+		header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
+		StringBuffer json;
+		json = JiraApiHelper.getInstance().sendRequest("GET", header);
+		return json;
 	}
 	
 	public String[] queryUsers() {
