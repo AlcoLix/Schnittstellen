@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Hashtable;
 
@@ -40,6 +41,7 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.border.EtchedBorder;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableRowSorter;
 
 import Jira.JiraApiHelper;
 import Jira.JiraParser;
@@ -172,9 +174,25 @@ public class MainFrame {
 		worklogTable.getColumnModel().getColumn(9).setPreferredWidth(75);
 		worklogTable.getColumnModel().getColumn(10).setPreferredWidth(75);
 		worklogTable.getColumnModel().getColumn(11).setPreferredWidth(75);
+		worklogTable.setAutoCreateRowSorter(true);
 		JScrollPane scrollPane = new JScrollPane(worklogTable);
 		scrollPane.setPreferredSize(new Dimension(1150, 600));
 		scrollPane.setMinimumSize(new Dimension(1150, 600));
+		
+		//Initializing the row sorter
+		TableRowSorter<WorklogTableModel> sorter = new TableRowSorter<WorklogTableModel>((WorklogTableModel)worklogTable.getModel());
+		worklogTable.setRowSorter(sorter);
+		sorter.setComparator(1, new Comparator<String>() {
+			@Override
+			public int compare(String o1, String o2) {
+				//Cut the date String into pieces and reassamble for correct default sorting
+				StringBuffer s1 = new StringBuffer(o1.substring(6,10));
+				s1.append(o1.substring(3, 5)).append(o1.substring(0,2)).append(o1.substring(10));
+				StringBuffer s2 = new StringBuffer(o2.substring(6,10));
+				s2.append(o2.substring(3, 5)).append(o2.substring(0,2)).append(o2.substring(10));
+				return s1.toString().compareTo(s2.toString());
+			}
+		});
 		center.add(scrollPane);
 	}
 
@@ -503,6 +521,14 @@ public class MainFrame {
 		@Override
 		public int getRowCount() {
 			return worklogList.size();
+		}
+		
+		@Override
+		public Class<?> getColumnClass(int columnIndex) {
+			if(getRowCount()==0) {
+				return Object.class;
+			}
+			return getValueAt(0, columnIndex).getClass();
 		}
 
 		@Override
