@@ -17,7 +17,9 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.FilenameFilter;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -28,6 +30,7 @@ import java.util.Hashtable;
 import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -57,6 +60,7 @@ public class MainFrame {
 	private JFrame frame;
 	private JLabel searchStringDisplay;
 	private SettingsDialog settingsDialog;
+	private ScriptDialog scriptDialog;
 	private JTable worklogTable;
 	private ArrayList<Worklog> worklogList = new ArrayList<Worklog>();
 	private Thread searchThread;
@@ -130,6 +134,32 @@ public class MainFrame {
 			}
 		});
 		data.add(exit);
+		JMenu scripting = new JMenu("Automatisierung");
+		menuBar.add(scripting);
+		JMenuItem newScript = new JMenuItem("Neu erstellen");
+		newScript.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				openScriptDialog(true);
+			}
+		});
+		scripting.add(newScript);
+		JMenuItem editScript = new JMenuItem("ändern");
+		editScript.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				openScriptDialog(false);
+			}
+		});
+		scripting.add(editScript);
+		JMenuItem executeScript = new JMenuItem("Ausführen");
+		executeScript.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				openExecuteScriptDialog();
+			}
+		});
+		scripting.add(executeScript);
 	}
 
 	@SuppressWarnings("serial")
@@ -243,6 +273,13 @@ public class MainFrame {
 			settingsDialog.setVisible(true);
 		}
 	}
+	
+	private void openScriptDialog(boolean createNew) {
+		scriptDialog = new ScriptDialog(createNew);
+	}
+	private void openExecuteScriptDialog() {
+		
+	}
 
 	private void exportToFile() {
 		if (worklogList.size() > 0) {
@@ -281,6 +318,42 @@ public class MainFrame {
 			instance = new MainFrame();
 		}
 		return instance;
+	}
+
+	@SuppressWarnings("serial")
+	private class ScriptDialog extends JDialog {
+		private String name;
+		public ScriptDialog(boolean createNew) {
+			super(frame, true);
+			setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+			pack();
+			setVisible(true);
+			GuiUtils.centerDialogOnWindow(this, frame);
+			if(createNew) {
+				name = JOptionPane.showInputDialog(this, "Bitte Scriptnamen angeben","",JOptionPane.INFORMATION_MESSAGE);
+			}else {
+				File f;
+				String[] files = new String[0];
+				try {
+					f = new File(main.Main.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+					files = f.list(new FilenameFilter() {
+						@Override
+						public boolean accept(File dir, String name) {
+							name.endsWith(".scr");
+							return false;
+						}
+					});
+				} catch (URISyntaxException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				if(files.length>0) {
+					name = JOptionPane.showInputDialog(this, "Bitte Scriptnamen auswählen", "", JOptionPane.INFORMATION_MESSAGE, null, files, files[0]).toString();
+				}else {
+					name = JOptionPane.showInputDialog(this, "Keine Daten gefunden, bitte neuen Scriptnamen angeben","",JOptionPane.INFORMATION_MESSAGE);
+				}
+			}
+		}
 	}
 
 	@SuppressWarnings("serial")
