@@ -28,9 +28,9 @@ import java.util.Date;
 import java.util.Hashtable;
 
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -39,16 +39,24 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSlider;
+import javax.swing.JSpinner;
+import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
+import javax.swing.SpinnerModel;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.border.EtchedBorder;
+import javax.swing.event.ChangeListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableRowSorter;
 
 import Jira.JiraApiHelper;
 import Jira.JiraParser;
 import Jira.Worklog;
+import Jira.scripting.Script;
+import Jira.scripting.ScriptStep;
 import Jira.utils.CalendarUtils;
 import Jira.utils.GuiUtils;
 import Jira.utils.StringUtils;
@@ -283,26 +291,35 @@ public class MainFrame {
 
 	private void exportToFile() {
 		if (worklogList.size() > 0) {
-			try {
 				String s = JOptionPane.showInputDialog(frame, "Dateiname angeben (ohne Endung)", "Exportdate speichern",
 						JOptionPane.QUESTION_MESSAGE);
 				if (!StringUtils.isEmpty(s)) {
-					StringBuffer buf = JiraParser.parseWorklogsToCsvString(worklogList);
 					File f = new File("latest.csv");
-					FileWriter writer = new FileWriter(f, false);
-					writer.write(buf.toString());
-					writer.close();
+					writeWorklogsToFile(worklogList, f);
 					f = new File(s.split("\\.")[0] + ".csv");
-					writer = new FileWriter(f, false);
-					writer.write(buf.toString());
-					writer.close();
-					JOptionPane.showInternalMessageDialog(frame.getContentPane(),
-							"Datei " + f.getCanonicalPath() + " wurde gespeichert", "Datenexport",
-							JOptionPane.INFORMATION_MESSAGE);
+					writeWorklogsToFile(worklogList, f);
+					try {
+						JOptionPane.showInternalMessageDialog(frame.getContentPane(),
+								"Datei " + f.getCanonicalPath() + " wurde gespeichert", "Datenexport",
+								JOptionPane.INFORMATION_MESSAGE);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+		}
+	}
+	
+	private void writeWorklogsToFile(ArrayList<Worklog> worklogs, File f) {
+		try {
+			StringBuffer buf = JiraParser.parseWorklogsToCsvString(worklogList);
+			FileWriter writer = new FileWriter(f, false);
+			writer.write(buf.toString());
+			writer.close();
+			writer = new FileWriter(f, false);
+			writer.write(buf.toString());
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -322,13 +339,14 @@ public class MainFrame {
 
 	@SuppressWarnings("serial")
 	private class ScriptDialog extends JDialog {
-		private String name;
+		private Script script;
+		private JTextField path;
+		private int stepCount;
+		private JTabbedPane tabbed;
 		public ScriptDialog(boolean createNew) {
 			super(frame, true);
 			setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-			pack();
-			setVisible(true);
-			GuiUtils.centerDialogOnWindow(this, frame);
+			String name;
 			if(createNew) {
 				name = JOptionPane.showInputDialog(this, "Bitte Scriptnamen angeben","",JOptionPane.INFORMATION_MESSAGE);
 			}else {
@@ -344,7 +362,6 @@ public class MainFrame {
 						}
 					});
 				} catch (URISyntaxException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				if(files.length>0) {
@@ -353,6 +370,183 @@ public class MainFrame {
 					name = JOptionPane.showInputDialog(this, "Keine Daten gefunden, bitte neuen Scriptnamen angeben","",JOptionPane.INFORMATION_MESSAGE);
 				}
 			}
+			script = Script.getScript(name);
+			setLayout(new BorderLayout());
+			tabbed = new JTabbedPane();
+			stepCount = 0;
+			for (ScriptStep step : script.getSteps()) {
+				stepCount++;
+				tabbed.addTab("Schritt "+stepCount, initTab(step)) ;
+			}
+			if(script.getSteps().size()==0) {
+				addStep();
+			}
+			add(tabbed, BorderLayout.CENTER);
+			JPanel buttonBar = new JPanel();
+			add(buttonBar, BorderLayout.SOUTH);
+			JButton add = new JButton("Schritt Hinzufügen");
+			add.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					addStep();
+				}
+			});
+			buttonBar.add(add);
+			JButton save = new JButton("Speichern");
+			save.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					save();
+				}
+			});
+			buttonBar.add(save);
+			JButton execute = new JButton("Ausführen");
+			execute.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					execute();
+				}
+			});
+			buttonBar.add(execute);
+			pack();
+			setVisible(true);
+			GuiUtils.centerDialogOnWindow(this, frame);
+		}
+		private void save() {
+			script.save();
+		}
+		private void execute() {
+			
+		}
+		private void addStep() {
+			stepCount++;
+			ScriptStep step = new ScriptStep();
+			script.getSteps().add(step);
+			tabbed.addTab("Schritt " + stepCount, initTab(step));
+		}
+		private JPanel initTab(ScriptStep step) {
+			JPanel tab = new JPanel();
+			JComboBox<String> project;
+			JSpinner fromDateOffset;
+			JSpinner toDateOffset;
+			JComboBox<String> snapToWeekMonthYear;
+			JComboBox<String> offsetUnit;
+			JComboBox<String> user;
+			final JComboBox<String> epic = new JComboBox<String>();
+			JTextField ordernumber;
+			JTextField position;
+			tab.setLayout(new GridBagLayout());
+			GridBagConstraints c = new GridBagConstraints();
+			c.fill = GridBagConstraints.BOTH;
+			c.gridx = 0;
+			c.gridy = 0;
+			c.gridheight = 1;
+			c.gridwidth = 1;
+			c.insets.set(1, 1, 1, 1);
+			tab.add(new JLabel("Projekt"), c);
+			project = new JComboBox<String>();
+			project.addItem("Alle");
+			for (int i = 0; i < projects.length; i++) {
+				project.addItem(projects[i]);
+			}
+			project.addItemListener(new ItemListener() {
+				@Override
+				public void itemStateChanged(ItemEvent e) {
+					if (e.getStateChange() == ItemEvent.SELECTED) {
+						String selection = e.getItem().toString();
+						if (e.getItem().equals("Alle")) {
+							selection = "";
+						}
+						String[] epics = JiraApiHelper.getInstance().queryEpics(selection);
+						epic.removeAllItems();
+						epic.addItem("Alle");
+						for (int i = 0; i < epics.length; i++) {
+							epic.addItem(epics[i]);
+						}
+					}
+				}
+			});
+			c.gridy = 0;
+			c.gridx = 1;
+			tab.add(project, c);
+			c.gridy = 1;
+			c.gridx = 0;
+			tab.add(new JLabel("von (Früher als Ausführungsdatum)"), c);
+			fromDateOffset = new JSpinner(new SpinnerNumberModel(0, 0, 50, 1));
+			c.gridy = 1;
+			c.gridx = 1;
+			tab.add(fromDateOffset, c);
+			c.gridy = 2;
+			c.gridx = 0;
+			tab.add(new JLabel("bis (Früher als Ausführungsdatum)"), c);
+			toDateOffset = new JSpinner(new SpinnerNumberModel(0, 0, 50, 1));
+			c.gridy = 2;
+			c.gridx = 1;
+			tab.add(toDateOffset, c);
+			c.gridy = 3;
+			c.gridx = 0;
+			tab.add(new JLabel("gemessen in..."), c);
+			offsetUnit = new JComboBox<String>() ;
+			offsetUnit.addItem("Tage");
+			offsetUnit.addItem("Monate");
+			offsetUnit.addItem("Jahre");
+			c.gridy = 3;
+			c.gridx = 1;
+			tab.add(offsetUnit, c);
+			c.gridy = 4;
+			c.gridx = 0;
+			tab.add(new JLabel("Runden auf."), c);
+			snapToWeekMonthYear = new JComboBox<String>() ;
+			snapToWeekMonthYear.addItem("Nicht Runden");
+			snapToWeekMonthYear.addItem("Wochen");
+			snapToWeekMonthYear.addItem("Monate");
+			snapToWeekMonthYear.addItem("Jahre");
+			c.gridy = 4;
+			c.gridx = 1;
+			tab.add(snapToWeekMonthYear, c);
+			c.gridy = 5;
+			c.gridx = 0;
+			tab.add(new JLabel("Mitarbeiter"), c);
+			user = new JComboBox<String>();
+			user.addItem("Alle");
+			for (int i = 0; i < users.length; i++) {
+				user.addItem(users[i]);
+			}
+			c.gridy = 5;
+			c.gridx = 1;
+			tab.add(user, c);
+			c.gridy = 6;
+			c.gridx = 0;
+			tab.add(new JLabel("Epic"), c);
+			epic.addItem("Alle");
+			for (int i = 0; i < epics.length; i++) {
+				epic.addItem(epics[i]);
+			}
+			c.gridy = 6;
+			c.gridx = 1;
+			tab.add(epic, c);
+			c.gridy = 7;
+			c.gridx = 0;
+			tab.add(new JLabel("Auftragsnummer"), c);
+			c.gridy = 7;
+			c.gridx = 1;
+			ordernumber = new JTextField();
+			tab.add(ordernumber, c);
+			c.gridy = 8;
+			c.gridx = 0;
+			tab.add(new JLabel("Position"), c);
+			c.gridy = 8;
+			c.gridx = 1;
+			position = new JTextField();
+			tab.add(position, c);
+			c.gridy = 9;
+			c.gridx = 0;
+			tab.add(new JLabel("Pfad und Name für Exportdatei"), c);
+			c.gridy = 9;
+			c.gridx = 1;
+			path = new JTextField();
+			tab.add(path, c);		
+			return tab;
 		}
 	}
 
