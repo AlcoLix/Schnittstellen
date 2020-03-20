@@ -8,16 +8,16 @@ import Jira.utils.CalendarUtils;
 import Jira.utils.StringUtils;
 
 public class ScriptStep {
-	private String savePath;
-	private String project;
-	private String dateOffsetUnit;
-	private int relativeStartDate;
-	private int relativeEndDate;
-	private String snapToWeekMonthYear;
-	private String user;
-	private String epic;
-	private String ordernumber;
-	private String orderposition;
+	private String savePath = "";
+	private String project = "";
+	private String dateOffsetUnit = "";
+	private int relativeStartDate = 0;
+	private int relativeEndDate = 0;
+	private String snapToWeekMonthYear = "";
+	private String user = "";
+	private String epic = "";
+	private String ordernumber = "";
+	private String orderposition = "";
 	
 	public ScriptStep() {
 	}

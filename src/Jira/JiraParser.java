@@ -1,5 +1,8 @@
 package Jira;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -293,5 +296,19 @@ public class JiraParser {
 			csvString.append(worklog.getTimeSpentSeconds()).append("\r\n");
 		}
 		return csvString;
+	}
+	
+	public static void writeWorklogsToFile(ArrayList<Worklog> worklogs, File f) {
+		try {
+			StringBuffer buf = JiraParser.parseWorklogsToCsvString(worklogs);
+			FileWriter writer = new FileWriter(f, false);
+			writer.write(buf.toString());
+			writer.close();
+			writer = new FileWriter(f, false);
+			writer.write(buf.toString());
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

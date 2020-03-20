@@ -16,7 +16,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -39,16 +38,17 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JSlider;
 import javax.swing.JSpinner;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
-import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.border.EtchedBorder;
+import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableRowSorter;
 
@@ -68,7 +68,6 @@ public class MainFrame {
 	private JFrame frame;
 	private JLabel searchStringDisplay;
 	private SettingsDialog settingsDialog;
-	private ScriptDialog scriptDialog;
 	private JTable worklogTable;
 	private ArrayList<Worklog> worklogList = new ArrayList<Worklog>();
 	private Thread searchThread;
@@ -283,7 +282,7 @@ public class MainFrame {
 	}
 	
 	private void openScriptDialog(boolean createNew) {
-		scriptDialog = new ScriptDialog(createNew);
+		new ScriptDialog(createNew);
 	}
 	private void openExecuteScriptDialog() {
 		
@@ -295,9 +294,9 @@ public class MainFrame {
 						JOptionPane.QUESTION_MESSAGE);
 				if (!StringUtils.isEmpty(s)) {
 					File f = new File("latest.csv");
-					writeWorklogsToFile(worklogList, f);
+					JiraParser.writeWorklogsToFile(worklogList, f);
 					f = new File(s.split("\\.")[0] + ".csv");
-					writeWorklogsToFile(worklogList, f);
+					JiraParser.writeWorklogsToFile(worklogList, f);
 					try {
 						JOptionPane.showInternalMessageDialog(frame.getContentPane(),
 								"Datei " + f.getCanonicalPath() + " wurde gespeichert", "Datenexport",
@@ -306,20 +305,6 @@ public class MainFrame {
 						e.printStackTrace();
 					}
 				}
-		}
-	}
-	
-	private void writeWorklogsToFile(ArrayList<Worklog> worklogs, File f) {
-		try {
-			StringBuffer buf = JiraParser.parseWorklogsToCsvString(worklogList);
-			FileWriter writer = new FileWriter(f, false);
-			writer.write(buf.toString());
-			writer.close();
-			writer = new FileWriter(f, false);
-			writer.write(buf.toString());
-			writer.close();
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
 	}
 
@@ -357,10 +342,17 @@ public class MainFrame {
 					files = f.list(new FilenameFilter() {
 						@Override
 						public boolean accept(File dir, String name) {
-							name.endsWith(".scr");
-							return false;
+							return name.endsWith(".scr");
 						}
 					});
+					if(files.length==0) {
+						files = f.getParentFile().list(new FilenameFilter() {
+							@Override
+							public boolean accept(File dir, String name) {
+								return name.endsWith(".scr");
+							}
+						});
+					}
 				} catch (URISyntaxException e) {
 					e.printStackTrace();
 				}
@@ -370,6 +362,15 @@ public class MainFrame {
 					name = JOptionPane.showInputDialog(this, "Keine Daten gefunden, bitte neuen Scriptnamen angeben","",JOptionPane.INFORMATION_MESSAGE);
 				}
 			}
+			if(!StringUtils.isEmpty(name)){
+				name = name.split("\\.")[0];
+				initContent(name);
+				pack();
+				setVisible(true);
+				GuiUtils.centerDialogOnWindow(this, frame);
+			}
+		}
+		private void initContent(String name) {
 			script = Script.getScript(name);
 			setLayout(new BorderLayout());
 			tabbed = new JTabbedPane();
@@ -392,7 +393,7 @@ public class MainFrame {
 				}
 			});
 			buttonBar.add(add);
-			JButton save = new JButton("Speichern");
+			JButton save = new JButton("Alle Schritte Speichern");
 			save.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
@@ -408,15 +409,12 @@ public class MainFrame {
 				}
 			});
 			buttonBar.add(execute);
-			pack();
-			setVisible(true);
-			GuiUtils.centerDialogOnWindow(this, frame);
 		}
 		private void save() {
 			script.save();
 		}
 		private void execute() {
-			
+			script.execute();
 		}
 		private void addStep() {
 			stepCount++;
@@ -424,7 +422,7 @@ public class MainFrame {
 			script.getSteps().add(step);
 			tabbed.addTab("Schritt " + stepCount, initTab(step));
 		}
-		private JPanel initTab(ScriptStep step) {
+		private JPanel initTab(final ScriptStep step) {
 			JPanel tab = new JPanel();
 			JComboBox<String> project;
 			JSpinner fromDateOffset;
@@ -435,6 +433,7 @@ public class MainFrame {
 			final JComboBox<String> epic = new JComboBox<String>();
 			JTextField ordernumber;
 			JTextField position;
+
 			tab.setLayout(new GridBagLayout());
 			GridBagConstraints c = new GridBagConstraints();
 			c.fill = GridBagConstraints.BOTH;
@@ -449,6 +448,7 @@ public class MainFrame {
 			for (int i = 0; i < projects.length; i++) {
 				project.addItem(projects[i]);
 			}
+			project.setSelectedItem(step.getProject());
 			project.addItemListener(new ItemListener() {
 				@Override
 				public void itemStateChanged(ItemEvent e) {
@@ -464,6 +464,7 @@ public class MainFrame {
 							epic.addItem(epics[i]);
 						}
 					}
+					step.setProject(e.getItem().toString());
 				}
 			});
 			c.gridy = 0;
@@ -473,6 +474,13 @@ public class MainFrame {
 			c.gridx = 0;
 			tab.add(new JLabel("von (Früher als Ausführungsdatum)"), c);
 			fromDateOffset = new JSpinner(new SpinnerNumberModel(0, 0, 50, 1));
+			fromDateOffset.addChangeListener(new ChangeListener() {
+				@Override
+				public void stateChanged(ChangeEvent e) {
+					step.setRelativeStartDate((Integer)fromDateOffset.getModel().getValue());
+				}
+			});
+			fromDateOffset.setValue(step.getRelativeStartDate());
 			c.gridy = 1;
 			c.gridx = 1;
 			tab.add(fromDateOffset, c);
@@ -480,6 +488,13 @@ public class MainFrame {
 			c.gridx = 0;
 			tab.add(new JLabel("bis (Früher als Ausführungsdatum)"), c);
 			toDateOffset = new JSpinner(new SpinnerNumberModel(0, 0, 50, 1));
+			toDateOffset.addChangeListener(new ChangeListener() {
+				@Override
+				public void stateChanged(ChangeEvent e) {
+					step.setRelativeEndDate((Integer)toDateOffset.getModel().getValue());
+				}
+			});
+			toDateOffset.setValue(step.getRelativeEndDate());
 			c.gridy = 2;
 			c.gridx = 1;
 			tab.add(toDateOffset, c);
@@ -490,6 +505,25 @@ public class MainFrame {
 			offsetUnit.addItem("Tage");
 			offsetUnit.addItem("Monate");
 			offsetUnit.addItem("Jahre");
+			offsetUnit.addItemListener(new ItemListener() {
+				@Override
+				public void itemStateChanged(ItemEvent e) {
+					if("Jahre".equalsIgnoreCase(e.getItem().toString())){
+						step.setDateOffsetUnit("year");
+					} else if("Monate".equalsIgnoreCase(e.getItem().toString())){
+						step.setDateOffsetUnit("month");
+					} else {
+						step.setDateOffsetUnit("day");
+					}
+				}
+			});
+			if(step.getDateOffsetUnit().equalsIgnoreCase("year")) {
+				offsetUnit.setSelectedItem("Jahre");
+			} else if(step.getDateOffsetUnit().equalsIgnoreCase("month")) {
+				offsetUnit.setSelectedItem("Monate");
+			} else {
+				offsetUnit.setSelectedItem("Tage");
+			}
 			c.gridy = 3;
 			c.gridx = 1;
 			tab.add(offsetUnit, c);
@@ -501,6 +535,29 @@ public class MainFrame {
 			snapToWeekMonthYear.addItem("Wochen");
 			snapToWeekMonthYear.addItem("Monate");
 			snapToWeekMonthYear.addItem("Jahre");
+			snapToWeekMonthYear.addItemListener(new ItemListener() {
+				@Override
+				public void itemStateChanged(ItemEvent e) {
+					if ("Jahre".equalsIgnoreCase(e.getItem().toString())){
+						step.setSnapToWeekMonthYear("year");
+					} else if ("Monate".equalsIgnoreCase(e.getItem().toString())){
+						step.setSnapToWeekMonthYear("month");
+					} else if ("Wochen".equalsIgnoreCase(e.getItem().toString())){
+						step.setSnapToWeekMonthYear("week");
+					} else {
+						step.setSnapToWeekMonthYear("");
+					}
+				}
+			});
+			if(step.getSnapToWeekMonthYear().equalsIgnoreCase("year")) {
+				snapToWeekMonthYear.setSelectedItem("Jahre");
+			} else if(step.getSnapToWeekMonthYear().equalsIgnoreCase("month")) {
+				snapToWeekMonthYear.setSelectedItem("Monate");
+			} else if(step.getSnapToWeekMonthYear().equalsIgnoreCase("week")) {
+				snapToWeekMonthYear.setSelectedItem("Wochen");
+			} else {
+				snapToWeekMonthYear.setSelectedItem("Nicht Runden");
+			}
 			c.gridy = 4;
 			c.gridx = 1;
 			tab.add(snapToWeekMonthYear, c);
@@ -512,6 +569,17 @@ public class MainFrame {
 			for (int i = 0; i < users.length; i++) {
 				user.addItem(users[i]);
 			}
+			user.addItemListener(new ItemListener() {
+				@Override
+				public void itemStateChanged(ItemEvent e) {
+					if(e.getItem().toString().equalsIgnoreCase("Alle")){
+						step.setUser("");
+					}else {	
+						step.setUser(e.getItem().toString());
+					}
+				}
+			});
+			user.setSelectedItem(step.getUser());
 			c.gridy = 5;
 			c.gridx = 1;
 			tab.add(user, c);
@@ -522,6 +590,17 @@ public class MainFrame {
 			for (int i = 0; i < epics.length; i++) {
 				epic.addItem(epics[i]);
 			}
+			epic.addItemListener(new ItemListener() {
+				@Override
+				public void itemStateChanged(ItemEvent e) {
+					if(e.getItem().toString().equalsIgnoreCase("Alle")){
+						step.setEpic("");
+					}else {	
+						step.setEpic(e.getItem().toString());
+					}
+				}
+			});
+			epic.setSelectedItem(step.getEpic());
 			c.gridy = 6;
 			c.gridx = 1;
 			tab.add(epic, c);
@@ -532,6 +611,23 @@ public class MainFrame {
 			c.gridx = 1;
 			ordernumber = new JTextField();
 			tab.add(ordernumber, c);
+			ordernumber.getDocument().addDocumentListener(new DocumentListener() {
+				@Override
+				public void removeUpdate(DocumentEvent e) {
+					step.setOrdernumber(ordernumber.getText());
+				}
+				
+				@Override
+				public void insertUpdate(DocumentEvent e) {
+					step.setOrdernumber(ordernumber.getText());
+				}
+				
+				@Override
+				public void changedUpdate(DocumentEvent e) {
+					step.setOrdernumber(ordernumber.getText());
+				}
+			});
+			ordernumber.setText(step.getOrdernumber());
 			c.gridy = 8;
 			c.gridx = 0;
 			tab.add(new JLabel("Position"), c);
@@ -539,13 +635,43 @@ public class MainFrame {
 			c.gridx = 1;
 			position = new JTextField();
 			tab.add(position, c);
+			position.getDocument().addDocumentListener(new DocumentListener() {
+				@Override
+				public void removeUpdate(DocumentEvent e) {
+					step.setOrderposition(position.getText());	
+				}
+				@Override
+				public void insertUpdate(DocumentEvent e) {
+					step.setOrderposition(position.getText());
+				}
+				@Override
+				public void changedUpdate(DocumentEvent e) {
+					step.setOrderposition(position.getText());
+				}
+			});
+			position.setText(step.getOrderposition());
 			c.gridy = 9;
 			c.gridx = 0;
 			tab.add(new JLabel("Pfad und Name für Exportdatei"), c);
 			c.gridy = 9;
 			c.gridx = 1;
 			path = new JTextField();
-			tab.add(path, c);		
+			tab.add(path, c);
+			path.getDocument().addDocumentListener(new DocumentListener() {
+				@Override
+				public void removeUpdate(DocumentEvent e) {
+					step.setSavePath(path.getText());
+				}
+				@Override
+				public void insertUpdate(DocumentEvent e) {
+					step.setSavePath(path.getText());
+				}
+				@Override
+				public void changedUpdate(DocumentEvent e) {
+					step.setSavePath(path.getText());
+				}
+			});
+			path.setText(step.getSavePath());
 			return tab;
 		}
 	}

@@ -4,13 +4,18 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Hashtable;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
-import javax.xml.bind.annotation.XmlTransient;
+
+import Jira.JiraApiHelper;
+import Jira.JiraParser;
+import Jira.Worklog;
+import Jira.utils.StringUtils;
 
 @XmlRootElement
 @XmlSeeAlso(ScriptStep.class)
@@ -47,8 +52,39 @@ public class Script {
 		}
 	}
 	
+	public void execute() {
+		for (ScriptStep step :getSteps()) {
+			if(!StringUtils.isEmpty(step.getSavePath())) {
+				ArrayList<Worklog> worklogList;
+				JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
+				JiraApiHelper.getInstance().appendKeyValue("jql",step.getSearchString());
+				JiraApiHelper.getInstance().appendKeyValue("validateQuery", "warn");
+				JiraApiHelper.getInstance().appendKeyValue("maxResults", "500");
+				JiraApiHelper.getInstance().appendKeyValue("fields", JiraApiHelper.FIELDS_FOR_TASKS);
+				Hashtable<String, String> header = new Hashtable<String, String>();
+				// Der Auth-Header mit API-Token in base64 encoding
+				header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
+				StringBuffer json = JiraApiHelper.getInstance().sendRequest("GET", header);
+				worklogList = JiraParser.parseSearchResults(json);
+				int startAt = 0;
+				while ((startAt = JiraParser.nextStartAt(json)) != -1) {
+					JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
+					JiraApiHelper.getInstance().appendKeyValue("jql", step.getSearchString());
+					JiraApiHelper.getInstance().appendKeyValue("validateQuery", "warn");
+					JiraApiHelper.getInstance().appendKeyValue("maxResults", "500");
+					JiraApiHelper.getInstance().appendKeyValue("fields", JiraApiHelper.FIELDS_FOR_TASKS);
+					JiraApiHelper.getInstance().appendKeyValue("startAt", String.valueOf(startAt));
+					json = JiraApiHelper.getInstance().sendRequest("GET", header);
+					worklogList.addAll(JiraParser.parseSearchResults(json));
+				}
+				File f = new File(step.getSavePath());
+				JiraParser.writeWorklogsToFile(worklogList, f);
+			}
+		}
+	}
+	
 	public static Script load(String name) {
-		File f = new File(name);
+		File f = new File(name+".scr");
 		Script c = new Script();
 		c.setName(name);
 		JAXBContext context;
@@ -68,13 +104,22 @@ public class Script {
 			File f = new File(main.Main.class.getProtectionDomain().getCodeSource().getLocation().toURI());
 			File[] files = f.listFiles(new FilenameFilter() {
 				@Override
-				public boolean accept(File dir, String name) {
-					name.endsWith(name+".scr");
-					return false;
+				public boolean accept(File dir, String filename) {
+					return filename.endsWith(name+".scr");
 				}
 			});
 			if(files.length>0) {
 				c = load(name);
+			} else {
+				 files = f.getParentFile().listFiles(new FilenameFilter() {
+					@Override
+					public boolean accept(File dir, String filename) {
+						return filename.endsWith(name+".scr");
+					}
+				});
+				 if(files.length>0) {
+					c = load(name);
+				}
 			}
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
