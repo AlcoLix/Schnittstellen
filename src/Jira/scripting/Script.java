@@ -112,15 +112,18 @@ public class Script {
 		c.setName(name);
 		try {
 			File f = new File(main.Main.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-			File[] files = f.listFiles(new FilenameFilter() {
-				@Override
-				public boolean accept(File dir, String filename) {
-					if(name.endsWith(".scr")) {
-						return filename.endsWith(name);
+			File[] files = new File[0];
+			if(f.isDirectory()&&f.exists()) {
+				files = f.listFiles(new FilenameFilter() {
+					@Override
+					public boolean accept(File dir, String filename) {
+						if(name.endsWith(".scr")) {
+							return filename.endsWith(name);
+						}
+						return filename.endsWith(name+".scr");
 					}
-					return filename.endsWith(name+".scr");
-				}
-			});
+				});
+			}
 			if(files.length>0) {
 				c = load(name);
 			} else {

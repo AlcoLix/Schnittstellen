@@ -289,12 +289,14 @@ public class MainFrame {
 		String[] files = new String[0];
 		try {
 			f = new File(main.Main.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-			files = f.list(new FilenameFilter() {
-				@Override
-				public boolean accept(File dir, String name) {
-					return name.endsWith(".scr");
-				}
-			});
+			if(f.isDirectory()&&f.exists()) {
+				files = f.list(new FilenameFilter() {
+					@Override
+					public boolean accept(File dir, String name) {
+						return name.endsWith(".scr");
+					}
+				});
+			}
 			if(files.length==0) {
 				files = f.getParentFile().list(new FilenameFilter() {
 					@Override
@@ -307,8 +309,10 @@ public class MainFrame {
 			e.printStackTrace();
 		}
 		if(files.length>0) {
-			String name = JOptionPane.showInputDialog(frame, "Bitte Scriptnamen auswählen", "", JOptionPane.INFORMATION_MESSAGE, null, files, files[0]).toString();
-			Script.getScript(name).execute();
+			Object name = JOptionPane.showInputDialog(frame, "Bitte Scriptnamen auswählen", "", JOptionPane.INFORMATION_MESSAGE, null, files, files[0]).toString();
+			if(name!=null) {
+				Script.getScript(name.toString()).execute();
+			}
 		}else {
 			JOptionPane.showMessageDialog(frame, "Keine Daten gefunden");
 		}
@@ -357,7 +361,7 @@ public class MainFrame {
 		public ScriptDialog(boolean createNew) {
 			super(frame, true);
 			setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-			String name;
+			String name = "";
 			if(createNew) {
 				name = JOptionPane.showInputDialog(this, "Bitte Scriptnamen angeben","",JOptionPane.INFORMATION_MESSAGE);
 			}else {
@@ -365,12 +369,14 @@ public class MainFrame {
 				String[] files = new String[0];
 				try {
 					f = new File(main.Main.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-					files = f.list(new FilenameFilter() {
-						@Override
-						public boolean accept(File dir, String name) {
-							return name.endsWith(".scr");
-						}
-					});
+					if(f.isDirectory()&&f.exists()) {
+						files = f.list(new FilenameFilter() {
+							@Override
+							public boolean accept(File dir, String name) {
+								return name.endsWith(".scr");
+							}
+						});
+					}
 					if(files.length==0) {
 						files = f.getParentFile().list(new FilenameFilter() {
 							@Override
@@ -383,7 +389,10 @@ public class MainFrame {
 					e.printStackTrace();
 				}
 				if(files.length>0) {
-					name = JOptionPane.showInputDialog(this, "Bitte Scriptnamen auswählen", "", JOptionPane.INFORMATION_MESSAGE, null, files, files[0]).toString();
+					Object o = JOptionPane.showInputDialog(this, "Bitte Scriptnamen auswählen", "", JOptionPane.INFORMATION_MESSAGE, null, files, files[0]);
+					if(o!=null) {
+						name = o.toString();
+					}
 				}else {
 					name = JOptionPane.showInputDialog(this, "Keine Daten gefunden, bitte neuen Scriptnamen angeben","",JOptionPane.INFORMATION_MESSAGE);
 				}

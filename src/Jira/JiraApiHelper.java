@@ -29,7 +29,7 @@ public class JiraApiHelper extends ApiHelper {
 	 */
 	public StringBuffer sendRequest(String type, Hashtable<String, String>header) {
 		StringBuffer output = new StringBuffer();
-		System.out.println(ApiHelper.getInstance().getUrlString().toString());
+//		System.out.println(ApiHelper.getInstance().getUrlString().toString());
 		//try-catch Konstrukt; dritte Erweiterung wäre finally; finally ist wie ein Aufräumer, was hier steht, wird auf jeden Fall gemacht
 		try {
 		// Aufbau der Verbindung mit HTTP-Code-Abfrage
@@ -50,7 +50,7 @@ public class JiraApiHelper extends ApiHelper {
 				String line;
 				// Schleife, ob die Daten, die ich bekomme, das Ende erreicht haben oder nicht, wenn ja, dann Verbindung beenden
 				while ((line = br.readLine()) != null) {
-					System.out.println(line);
+//					System.out.println(line);
 					output.append(line).append("\r\n");
 				}
 				conn.disconnect();
