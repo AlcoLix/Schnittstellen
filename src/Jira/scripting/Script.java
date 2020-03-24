@@ -77,14 +77,24 @@ public class Script {
 					json = JiraApiHelper.getInstance().sendRequest("GET", header);
 					worklogList.addAll(JiraParser.parseSearchResults(json));
 				}
-				File f = new File(step.getSavePath());
+				worklogList = JiraApiHelper.applyFiltersToWorklogList(worklogList, step.getCalculatedStartDate(), step.getCalculatedEndDate(), step.getUser());
+				String filename =step.getSavePath();
+				if(!filename.endsWith(".csv")) {
+					filename+=".csv";
+				}
+				File f = new File(filename);
 				JiraParser.writeWorklogsToFile(worklogList, f);
 			}
 		}
 	}
 	
 	public static Script load(String name) {
-		File f = new File(name+".scr");
+		File f;
+		if(name.endsWith(".scr")) {
+			f = new File(name);
+		}else {
+			f = new File(name+".scr");
+		}
 		Script c = new Script();
 		c.setName(name);
 		JAXBContext context;
@@ -105,6 +115,9 @@ public class Script {
 			File[] files = f.listFiles(new FilenameFilter() {
 				@Override
 				public boolean accept(File dir, String filename) {
+					if(name.endsWith(".scr")) {
+						return filename.endsWith(name);
+					}
 					return filename.endsWith(name+".scr");
 				}
 			});
@@ -114,6 +127,9 @@ public class Script {
 				 files = f.getParentFile().listFiles(new FilenameFilter() {
 					@Override
 					public boolean accept(File dir, String filename) {
+						if(name.endsWith(".scr")) {
+							return filename.endsWith(name);
+						}
 						return filename.endsWith(name+".scr");
 					}
 				});

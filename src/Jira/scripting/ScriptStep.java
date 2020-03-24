@@ -1,6 +1,7 @@
 package Jira.scripting;
 
 import java.util.Calendar;
+import java.util.Date;
 
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -101,18 +102,9 @@ public class ScriptStep {
 	public void setSavePath(String savePath) {
 		this.savePath = savePath;
 	}
-	
+
 	@XmlTransient
-	public String getSearchString() {
-		StringBuffer buf = new StringBuffer();
-		boolean hasContent = false;
-		if (!StringUtils.isEmpty(getProject())) {
-			if (hasContent) {
-				buf.append(" and ");
-			}
-			buf.append("project = ").append("\"").append(getProject()).append("\"");
-			hasContent = true;
-		}
+	public Date getCalculatedStartDate() {
 		if (!StringUtils.isEmpty(getDateOffsetUnit())&&getRelativeStartDate()!=0) {
 			Calendar c = Calendar.getInstance();
 			if(getDateOffsetUnit().equalsIgnoreCase("year")) {
@@ -121,9 +113,6 @@ public class ScriptStep {
 				c.add(Calendar.MONTH, -getRelativeStartDate());
 			} else {
 				c.add(Calendar.DAY_OF_MONTH, -getRelativeStartDate());
-			}
-			if (hasContent) {
-				buf.append(" and ");
 			}
 			if (!StringUtils.isEmpty(getSnapToWeekMonthYear())){
 				if(getSnapToWeekMonthYear().equalsIgnoreCase("week")) {
@@ -137,9 +126,12 @@ public class ScriptStep {
 					c.set(Calendar.MONTH, 0);
 				}
 			}
-			buf.append("worklogdate >= \"").append(CalendarUtils.getStringToCalendarForREST(c)).append("\"");
-			hasContent = true;
+			return c.getTime();
 		}
+		return null;
+	}
+	@XmlTransient
+	public Date getCalculatedEndDate() {
 		if (!StringUtils.isEmpty(getDateOffsetUnit())&&getRelativeEndDate()!=0) {
 			Calendar c = Calendar.getInstance();
 			if(getDateOffsetUnit().equalsIgnoreCase("year")) {
@@ -148,9 +140,6 @@ public class ScriptStep {
 				c.add(Calendar.MONTH, -getRelativeEndDate());	
 			}else {
 				c.add(Calendar.DAY_OF_MONTH, -getRelativeEndDate());	
-			}
-			if (hasContent) {
-				buf.append(" and ");
 			}
 			if (!StringUtils.isEmpty(getSnapToWeekMonthYear())){
 				if(getSnapToWeekMonthYear().equalsIgnoreCase("week")) {
@@ -168,6 +157,37 @@ public class ScriptStep {
 					c.add(Calendar.DAY_OF_MONTH, -1);
 				}
 			}
+			return c.getTime();
+			}
+		return null;
+	}
+	
+	@XmlTransient
+	public String getSearchString() {
+		StringBuffer buf = new StringBuffer();
+		boolean hasContent = false;
+		if (!StringUtils.isEmpty(getProject())) {
+			if (hasContent) {
+				buf.append(" and ");
+			}
+			buf.append("project = ").append("\"").append(getProject()).append("\"");
+			hasContent = true;
+		}
+		if (!StringUtils.isEmpty(getDateOffsetUnit())&&getRelativeStartDate()!=0) {
+			if (hasContent) {
+				buf.append(" and ");
+			}
+			Calendar c = Calendar.getInstance();
+			c.setTime(getCalculatedStartDate());
+			buf.append("worklogdate >= \"").append(CalendarUtils.getStringToCalendarForREST(c)).append("\"");
+			hasContent = true;
+		}
+		if (!StringUtils.isEmpty(getDateOffsetUnit())&&getRelativeEndDate()!=0) {
+			if (hasContent) {
+				buf.append(" and ");
+			}
+			Calendar c = Calendar.getInstance();
+			c.setTime(getCalculatedEndDate());
 			buf.append("worklogdate <= \"").append(CalendarUtils.getStringToCalendarForREST(c)).append("\"");
 			hasContent = true;
 		}

@@ -8,8 +8,11 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Hashtable;
 
+import Jira.utils.CalendarUtils;
+import Jira.utils.StringUtils;
 import main.ApiHelper;
 
 public class JiraApiHelper extends ApiHelper {
@@ -145,6 +148,43 @@ public class JiraApiHelper extends ApiHelper {
 		retval = retval.replace("<", "%3C");
 		retval = retval.replace(">", "%3E");
 		retval = retval.replace("ß", "%C3%9F");
+		return retval;
+	}
+
+	/**
+	 * since the api filters the tickets, not the worklogs, we need to apply our
+	 * filter settings to the worklogList
+	 * 
+	 * @param list
+	 * @param fromDate
+	 * @param toDate
+	 * @param user
+	 */
+	public static ArrayList<Worklog> applyFiltersToWorklogList(ArrayList<Worklog> list, Date fromDate, Date toDate, String user){
+		ArrayList<Worklog> retval = new ArrayList<Worklog>(list.size());
+		for (Worklog worklog : list) {
+			boolean keep = true;
+			if (fromDate != null) {
+				Date d = CalendarUtils.startOfDay(fromDate);
+				if (worklog.getDate().before(d)&&!CalendarUtils.isSameDay(d, worklog.getDate())) {
+					keep = false;
+				}
+			}
+			if (toDate != null) {
+				Date d = CalendarUtils.endOfDay(toDate);
+				if (worklog.getDate().after(d)&&!CalendarUtils.isSameDay(d, worklog.getDate())) {
+					keep = false;
+				}
+			}
+			if (!StringUtils.isEmpty(user)) {
+				if (!worklog.getUser().equalsIgnoreCase(user)) {
+					keep = false;
+				}
+			}
+			if (keep) {
+				retval.add(worklog);
+			}
+		}
 		return retval;
 	}
 	

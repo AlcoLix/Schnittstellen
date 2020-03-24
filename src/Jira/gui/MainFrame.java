@@ -285,7 +285,33 @@ public class MainFrame {
 		new ScriptDialog(createNew);
 	}
 	private void openExecuteScriptDialog() {
-		
+		File f;
+		String[] files = new String[0];
+		try {
+			f = new File(main.Main.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+			files = f.list(new FilenameFilter() {
+				@Override
+				public boolean accept(File dir, String name) {
+					return name.endsWith(".scr");
+				}
+			});
+			if(files.length==0) {
+				files = f.getParentFile().list(new FilenameFilter() {
+					@Override
+					public boolean accept(File dir, String name) {
+						return name.endsWith(".scr");
+					}
+				});
+			}
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+		if(files.length>0) {
+			String name = JOptionPane.showInputDialog(frame, "Bitte Scriptnamen auswählen", "", JOptionPane.INFORMATION_MESSAGE, null, files, files[0]).toString();
+			Script.getScript(name).execute();
+		}else {
+			JOptionPane.showMessageDialog(frame, "Keine Daten gefunden");
+		}
 	}
 
 	private void exportToFile() {
@@ -876,31 +902,11 @@ public class MainFrame {
 		 * @param list
 		 */
 		private ArrayList<Worklog> applyFiltersToWorklogList(ArrayList<Worklog> list) {
-			ArrayList<Worklog> retval = new ArrayList<Worklog>(list.size());
-			for (Worklog worklog : list) {
-				boolean keep = true;
-				if (fromDate.getDate() != null) {
-					Date d = CalendarUtils.startOfDay(fromDate.getDate());
-					if (worklog.getDate().before(d)&&!CalendarUtils.isSameDay(d, worklog.getDate())) {
-						keep = false;
-					}
-				}
-				if (toDate.getDate() != null) {
-					Date d = CalendarUtils.endOfDay(toDate.getDate());
-					if (worklog.getDate().after(d)&&!CalendarUtils.isSameDay(d, worklog.getDate())) {
-						keep = false;
-					}
-				}
-				if (user.getSelectedIndex() > 0) {
-					if (!worklog.getUser().equalsIgnoreCase(user.getSelectedItem().toString())) {
-						keep = false;
-					}
-				}
-				if (keep) {
-					retval.add(worklog);
-				}
+			String selectedUser = "";
+			if (user.getSelectedIndex() > 0) {
+				selectedUser = user.getSelectedItem().toString();
 			}
-			return retval;
+			return JiraApiHelper.applyFiltersToWorklogList(list, fromDate.getDate(), toDate.getDate(), selectedUser);
 		}
 	}
 
