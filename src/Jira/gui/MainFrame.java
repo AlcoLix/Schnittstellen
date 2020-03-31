@@ -1,6 +1,7 @@
 package Jira.gui;
 
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -54,6 +55,7 @@ import javax.swing.table.TableRowSorter;
 
 import Jira.JiraApiHelper;
 import Jira.JiraParser;
+import Jira.Task;
 import Jira.Worklog;
 import Jira.scripting.Script;
 import Jira.scripting.ScriptStep;
@@ -69,7 +71,9 @@ public class MainFrame {
 	private JLabel searchStringDisplay;
 	private SettingsDialog settingsDialog;
 	private JTable worklogTable;
+	private JTable taskTable;
 	private ArrayList<Worklog> worklogList = new ArrayList<Worklog>();
+	private ArrayList<Task> taskList = new ArrayList<Task>();
 	private Thread searchThread;
 
 	private void initFrame() {
@@ -88,7 +92,6 @@ public class MainFrame {
 	private void initValues() {
 		
 		users = JiraApiHelper.getInstance().queryUsers();
-				
 
 		JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/project/search");
 		Hashtable<String, String> header = new Hashtable<String, String>();
@@ -169,7 +172,6 @@ public class MainFrame {
 		scripting.add(executeScript);
 	}
 
-	@SuppressWarnings("serial")
 	private void initContent() {
 		JPanel panel = new JPanel(new BorderLayout());
 		frame.setContentPane(panel);
@@ -179,8 +181,16 @@ public class MainFrame {
 		top.add(new JLabel("Suchbefehl:"));
 		searchStringDisplay = new JLabel("timespent > 0");
 		top.add(searchStringDisplay);
-		JPanel center = new JPanel();
-		panel.add(center, BorderLayout.CENTER);
+		JPanel contentPanel = new JPanel(new CardLayout());
+		JPanel worklogPanel = initWorklogPanel();
+		contentPanel.add(worklogPanel, "Worklog");
+		JPanel taskPanel = initTaskPanel();
+		contentPanel.add(taskPanel,"Task");
+		panel.add(contentPanel, BorderLayout.CENTER);
+	}
+	@SuppressWarnings("serial")
+	private JPanel initWorklogPanel(){
+		JPanel worklogPanel = new JPanel();
 		worklogTable = new JTable(new WorklogTableModel()) {
 
 			// Implement table cell tool tips.
@@ -230,7 +240,67 @@ public class MainFrame {
 				return s1.toString().compareTo(s2.toString());
 			}
 		});
-		center.add(scrollPane);
+		worklogPanel.add(scrollPane);
+		return worklogPanel;
+	}
+	
+	@SuppressWarnings("serial")
+	private JPanel initTaskPanel(){
+		JPanel taskPanel = new JPanel();
+		taskTable = new JTable(new TaskTableModel()) {
+
+			// Implement table cell tool tips.
+			public String getToolTipText(MouseEvent e) {
+				String tip = null;
+				java.awt.Point p = e.getPoint();
+				int rowIndex = rowAtPoint(p);
+				int colIndex = columnAtPoint(p);
+
+				try {
+					tip = getValueAt(rowIndex, colIndex).toString();
+				} catch (RuntimeException e1) {
+					// catch null pointer exception if mouse is over an empty line
+				}
+
+				return tip;
+			}
+		};
+		taskTable.getColumnModel().getColumn(0).setPreferredWidth(100);
+		taskTable.getColumnModel().getColumn(1).setPreferredWidth(125);
+		taskTable.getColumnModel().getColumn(2).setPreferredWidth(50);
+		taskTable.getColumnModel().getColumn(3).setPreferredWidth(75);
+		taskTable.getColumnModel().getColumn(4).setPreferredWidth(75);
+		taskTable.getColumnModel().getColumn(5).setPreferredWidth(50);
+		taskTable.getColumnModel().getColumn(6).setPreferredWidth(50);
+		taskTable.getColumnModel().getColumn(7).setPreferredWidth(200);
+		taskTable.getColumnModel().getColumn(8).setPreferredWidth(150);
+		taskTable.getColumnModel().getColumn(9).setPreferredWidth(75);
+		taskTable.getColumnModel().getColumn(10).setPreferredWidth(75);
+		taskTable.getColumnModel().getColumn(11).setPreferredWidth(75);
+		taskTable.getColumnModel().getColumn(12).setPreferredWidth(75);
+		taskTable.setAutoCreateRowSorter(true);
+		JScrollPane scrollPane = new JScrollPane(taskTable);
+		scrollPane.setPreferredSize(new Dimension(1150, 600));
+		scrollPane.setMinimumSize(new Dimension(1150, 600));
+		
+		//Initializing the row sorter
+		TableRowSorter<TaskTableModel> sorter = new TableRowSorter<TaskTableModel>((TaskTableModel)taskTable.getModel());
+		worklogTable.setRowSorter(sorter);
+		Comparator<String> dateComparator = new Comparator<String>() {
+			@Override
+			public int compare(String o1, String o2) {
+				//Cut the date String into pieces and reassamble for correct default sorting
+				StringBuffer s1 = new StringBuffer(o1.substring(6,10));
+				s1.append(o1.substring(3, 5)).append(o1.substring(0,2)).append(o1.substring(10));
+				StringBuffer s2 = new StringBuffer(o2.substring(6,10));
+				s2.append(o2.substring(3, 5)).append(o2.substring(0,2)).append(o2.substring(10));
+				return s1.toString().compareTo(s2.toString());
+			}
+		};
+		sorter.setComparator(5, dateComparator);
+		sorter.setComparator(6, dateComparator);
+		taskPanel.add(scrollPane);
+		return taskPanel;
 	}
 
 	private void startSearch() {
@@ -921,6 +991,7 @@ public class MainFrame {
 
 	@SuppressWarnings("serial")
 	private class WorklogTableModel extends AbstractTableModel {
+		
 		@Override
 		public int getColumnCount() {
 			return 12;
@@ -942,31 +1013,31 @@ public class MainFrame {
 		@Override
 		public Object getValueAt(int rowIndex, int columnIndex) {
 			switch (columnIndex) {
-			case 0:
-				return worklogList.get(rowIndex).getUser();
-			case 1:
-				SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-				return format.format(worklogList.get(rowIndex).getDate());
-			case 2:
-				return worklogList.get(rowIndex).getTimeSpent();
-			case 3:
-				return worklogList.get(rowIndex).getIssueKey();
-			case 4:
-				return worklogList.get(rowIndex).getComment();
-			case 5:
-				return worklogList.get(rowIndex).getOrdernumber();
-			case 6:
-				return worklogList.get(rowIndex).getOrderposition();
-			case 7:
-				return worklogList.get(rowIndex).getCustomer();
-			case 8:
-				return worklogList.get(rowIndex).getSummary();
-			case 9:
-				return worklogList.get(rowIndex).getProject();
-			case 10:
-				return worklogList.get(rowIndex).getEpic();
-			case 11:
-				return worklogList.get(rowIndex).getParent();
+				case 0:
+					return worklogList.get(rowIndex).getUser();
+				case 1:
+					SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+					return format.format(worklogList.get(rowIndex).getDate());
+				case 2:
+					return worklogList.get(rowIndex).getTimeSpent();
+				case 3:
+					return worklogList.get(rowIndex).getIssueKey();
+				case 4:
+					return worklogList.get(rowIndex).getComment();
+				case 5:
+					return worklogList.get(rowIndex).getOrdernumber();
+				case 6:
+					return worklogList.get(rowIndex).getOrderposition();
+				case 7:
+					return worklogList.get(rowIndex).getCustomer();
+				case 8:
+					return worklogList.get(rowIndex).getSummary();
+				case 9:
+					return worklogList.get(rowIndex).getProject();
+				case 10:
+					return worklogList.get(rowIndex).getEpic();
+				case 11:
+					return worklogList.get(rowIndex).getParent();
 			}
 			return "";
 		}
@@ -997,6 +1068,94 @@ public class MainFrame {
 			case 10:
 				return "Epic";
 			case 11:
+				return "Mutterticket";
+			}
+			return "";
+		}
+	}
+	@SuppressWarnings("serial")
+	private class TaskTableModel extends AbstractTableModel {
+		
+		@Override
+		public int getColumnCount() {
+			return 13;
+		}
+
+		@Override
+		public int getRowCount() {
+			return taskList.size();
+		}
+		
+		@Override
+		public Class<?> getColumnClass(int columnIndex) {
+			if(getRowCount()==0) {
+				return Object.class;
+			}
+			return getValueAt(0, columnIndex).getClass();
+		}
+
+		@Override
+		public Object getValueAt(int rowIndex, int columnIndex) {
+			SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+			switch(columnIndex) {
+			case 0:
+				return taskList.get(rowIndex).getProject();
+			case 1:
+				return taskList.get(rowIndex).getIssueKey();
+			case 2:
+				return taskList.get(rowIndex).getSummary();
+			case 3:
+				return taskList.get(rowIndex).getAssignee();
+			case 4:
+				return taskList.get(rowIndex).getResponsible();
+			case 5:
+				return format.format(taskList.get(rowIndex).getDueDate());
+			case 6:
+				return format.format(taskList.get(rowIndex).getPlannedDate());
+			case 7:
+				return taskList.get(rowIndex).getTimeSpent();
+			case 8:
+				return taskList.get(rowIndex).getTimeEstimate();
+			case 9:
+				return taskList.get(rowIndex).getOrdernumber();
+			case 10:
+				return taskList.get(rowIndex).getOrderposition();
+			case 11:
+				return taskList.get(rowIndex).getEpic();
+			case 12:
+				return taskList.get(rowIndex).getParent();
+			}
+			return "";
+		}
+
+		@Override
+		public String getColumnName(int column) {
+			switch(column){
+			case 0:
+				return "Projekt";
+			case 1:
+				return "Nummer";
+			case 2:
+				return "Titel";
+			case 3:
+				return "Zugewiesen";
+			case 4:
+				return "Verantwortlicher";
+			case 5:
+				return "Fälligkeit";
+			case 6:
+				return "geplantes Datum";
+			case 7:
+				return "gebuchte Zeit";
+			case 8:
+				return "geplante Zeit";
+			case 9:
+				return "Auftragsnummer";
+			case 10:
+				return "Auftragsposition";
+			case 11:
+				return "Epic";
+			case 12:
 				return "Mutterticket";
 			}
 			return "";
