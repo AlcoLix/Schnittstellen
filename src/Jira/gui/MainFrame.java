@@ -28,6 +28,7 @@ import java.util.Date;
 import java.util.Hashtable;
 
 import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
@@ -38,6 +39,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTabbedPane;
@@ -75,6 +77,12 @@ public class MainFrame {
 	private ArrayList<Worklog> worklogList = new ArrayList<Worklog>();
 	private ArrayList<Task> taskList = new ArrayList<Task>();
 	private Thread searchThread;
+	private searchMode currentSearchMode = searchMode.Worklog;
+	private JPanel contentPanel;
+	
+	private enum searchMode{
+		Worklog, Task;
+	}
 
 	private void initFrame() {
 		frame = new JFrame("Jira Auswertung");
@@ -181,7 +189,7 @@ public class MainFrame {
 		top.add(new JLabel("Suchbefehl:"));
 		searchStringDisplay = new JLabel("timespent > 0");
 		top.add(searchStringDisplay);
-		JPanel contentPanel = new JPanel(new CardLayout());
+		contentPanel = new JPanel(new CardLayout());
 		JPanel worklogPanel = initWorklogPanel();
 		contentPanel.add(worklogPanel, "Worklog");
 		JPanel taskPanel = initTaskPanel();
@@ -216,15 +224,16 @@ public class MainFrame {
 		worklogTable.getColumnModel().getColumn(4).setPreferredWidth(75);
 		worklogTable.getColumnModel().getColumn(5).setPreferredWidth(50);
 		worklogTable.getColumnModel().getColumn(6).setPreferredWidth(50);
-		worklogTable.getColumnModel().getColumn(7).setPreferredWidth(200);
+		worklogTable.getColumnModel().getColumn(7).setPreferredWidth(30);
 		worklogTable.getColumnModel().getColumn(8).setPreferredWidth(200);
-		worklogTable.getColumnModel().getColumn(9).setPreferredWidth(75);
+		worklogTable.getColumnModel().getColumn(9).setPreferredWidth(200);
 		worklogTable.getColumnModel().getColumn(10).setPreferredWidth(75);
 		worklogTable.getColumnModel().getColumn(11).setPreferredWidth(75);
+		worklogTable.getColumnModel().getColumn(12).setPreferredWidth(75);
 		worklogTable.setAutoCreateRowSorter(true);
 		JScrollPane scrollPane = new JScrollPane(worklogTable);
-		scrollPane.setPreferredSize(new Dimension(1150, 600));
-		scrollPane.setMinimumSize(new Dimension(1150, 600));
+		scrollPane.setPreferredSize(new Dimension(1180, 600));
+		scrollPane.setMinimumSize(new Dimension(1180, 600));
 		
 		//Initializing the row sorter
 		TableRowSorter<WorklogTableModel> sorter = new TableRowSorter<WorklogTableModel>((WorklogTableModel)worklogTable.getModel());
@@ -278,6 +287,7 @@ public class MainFrame {
 		taskTable.getColumnModel().getColumn(10).setPreferredWidth(75);
 		taskTable.getColumnModel().getColumn(11).setPreferredWidth(75);
 		taskTable.getColumnModel().getColumn(12).setPreferredWidth(75);
+		taskTable.getColumnModel().getColumn(13).setPreferredWidth(75);
 		taskTable.setAutoCreateRowSorter(true);
 		JScrollPane scrollPane = new JScrollPane(taskTable);
 		scrollPane.setPreferredSize(new Dimension(1150, 600));
@@ -285,7 +295,7 @@ public class MainFrame {
 		
 		//Initializing the row sorter
 		TableRowSorter<TaskTableModel> sorter = new TableRowSorter<TaskTableModel>((TaskTableModel)taskTable.getModel());
-		worklogTable.setRowSorter(sorter);
+		taskTable.setRowSorter(sorter);
 		Comparator<String> dateComparator = new Comparator<String>() {
 			@Override
 			public int compare(String o1, String o2) {
@@ -316,27 +326,53 @@ public class MainFrame {
 				JiraApiHelper.getInstance().appendKeyValue("jql", searchStringDisplay.getText());
 				JiraApiHelper.getInstance().appendKeyValue("validateQuery", "warn");
 				JiraApiHelper.getInstance().appendKeyValue("maxResults", "500");
-				JiraApiHelper.getInstance().appendKeyValue("fields", JiraApiHelper.FIELDS_FOR_TASKS);
+				if(currentSearchMode.equals(searchMode.Task)) {
+					JiraApiHelper.getInstance().appendKeyValue("fields", JiraApiHelper.FIELDS_FOR_TASKS);
+				}else if(currentSearchMode.equals(searchMode.Worklog)) {
+					JiraApiHelper.getInstance().appendKeyValue("fields", JiraApiHelper.FIELDS_FOR_WORKLOGS);	
+				}
 				Hashtable<String, String> header = new Hashtable<String, String>();
 				// Der Auth-Header mit API-Token in base64 encoding
 				header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
 				StringBuffer json = JiraApiHelper.getInstance().sendRequest("GET", header);
-				worklogList = JiraParser.parseSearchResults(json);
+				if(currentSearchMode.equals(searchMode.Task)) {
+					taskList = JiraParser.parseTaskSearchResults(json);
+				}else if(currentSearchMode.equals(searchMode.Worklog)) {
+					worklogList = JiraParser.parseWorklogSearchResults(json);
+				}
 				int startAt = 0;
 				while ((startAt = JiraParser.nextStartAt(json)) != -1) {
 					JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
 					JiraApiHelper.getInstance().appendKeyValue("jql", searchStringDisplay.getText());
 					JiraApiHelper.getInstance().appendKeyValue("validateQuery", "warn");
 					JiraApiHelper.getInstance().appendKeyValue("maxResults", "500");
-					JiraApiHelper.getInstance().appendKeyValue("fields", JiraApiHelper.FIELDS_FOR_TASKS);
+					if(currentSearchMode.equals(searchMode.Task)) {
+						JiraApiHelper.getInstance().appendKeyValue("fields", JiraApiHelper.FIELDS_FOR_TASKS);
+					}else if(currentSearchMode.equals(searchMode.Worklog)) {
+						JiraApiHelper.getInstance().appendKeyValue("fields", JiraApiHelper.FIELDS_FOR_WORKLOGS);	
+					}
 					JiraApiHelper.getInstance().appendKeyValue("startAt", String.valueOf(startAt));
 					json = JiraApiHelper.getInstance().sendRequest("GET", header);
-					worklogList.addAll(JiraParser.parseSearchResults(json));
+					if(currentSearchMode.equals(searchMode.Task)) {
+						taskList.addAll(JiraParser.parseTaskSearchResults(json));
+					}else if(currentSearchMode.equals(searchMode.Worklog)) {
+						worklogList.addAll(JiraParser.parseWorklogSearchResults(json));
+					}
 				}
 				if (settingsDialog != null) {
-					worklogList = settingsDialog.applyFiltersToWorklogList(worklogList);
+					if(currentSearchMode.equals(searchMode.Task)) {
+						//TODO
+					}else if(currentSearchMode.equals(searchMode.Worklog)) {
+						worklogList = settingsDialog.applyFiltersToWorklogList(worklogList);
+					}
 				}
-				worklogTable.revalidate();
+				if(currentSearchMode.equals(searchMode.Task)) {
+					taskTable.revalidate();
+					((CardLayout) contentPanel.getLayout()).show(contentPanel, "Task");
+				}else if(currentSearchMode.equals(searchMode.Worklog)) {
+					worklogTable.revalidate();
+					((CardLayout) contentPanel.getLayout()).show(contentPanel, "Worklog");
+				}
 				frame.setTitle(title);
 			}
 		};
@@ -389,8 +425,9 @@ public class MainFrame {
 	}
 
 	private void exportToFile() {
-		if (worklogList.size() > 0) {
-				String s = JOptionPane.showInputDialog(frame, "Dateiname angeben (ohne Endung)", "Exportdate speichern",
+		if(currentSearchMode.equals(searchMode.Worklog)) {
+			if (worklogList.size() > 0) {
+				String s = JOptionPane.showInputDialog(frame, "Dateiname angeben (ohne Endung)", "Exportdatei speichern",
 						JOptionPane.QUESTION_MESSAGE);
 				if (!StringUtils.isEmpty(s)) {
 					File f = new File("latest.csv");
@@ -405,6 +442,25 @@ public class MainFrame {
 						e.printStackTrace();
 					}
 				}
+			}
+		} else if(currentSearchMode.equals(searchMode.Task)) {
+			if (taskList.size() > 0) {
+				String s = JOptionPane.showInputDialog(frame, "Dateiname angeben (ohne Endung)", "Exportdatei speichern",
+						JOptionPane.QUESTION_MESSAGE);
+				if (!StringUtils.isEmpty(s)) {
+					File f = new File("latest.csv");
+					JiraParser.writeTasksToFile(taskList, f);
+					f = new File(s.split("\\.")[0] + ".csv");
+					JiraParser.writeTasksToFile(taskList, f);
+					try {
+						JOptionPane.showInternalMessageDialog(frame.getContentPane(),
+								"Datei " + f.getCanonicalPath() + " wurde gespeichert", "Datenexport",
+								JOptionPane.INFORMATION_MESSAGE);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
 		}
 	}
 
@@ -783,6 +839,9 @@ public class MainFrame {
 
 	@SuppressWarnings("serial")
 	private class SettingsDialog extends JDialog {
+		private JRadioButton worklogButton;
+		private JRadioButton taskButton;
+		private ButtonGroup typeGroup;
 		private JComboBox<String> project;
 		private JDatePicker fromDate;
 		private JDatePicker toDate;
@@ -811,6 +870,18 @@ public class MainFrame {
 			c.gridheight = 1;
 			c.gridwidth = 1;
 			c.insets.set(1, 1, 1, 1);
+			add(new JLabel("Suchen nach"));
+			c.gridx = 1;
+			typeGroup = new ButtonGroup();
+			worklogButton = new JRadioButton("Worklog",true);
+			typeGroup.add(worklogButton);
+			add(worklogButton,c);
+			c.gridx = 2;
+			taskButton = new JRadioButton("Ticket");
+			typeGroup.add(taskButton);
+			add(taskButton,c);
+			c.gridy++;
+			c.gridx= 0;
 			add(new JLabel("Projekt"), c);
 			project = new JComboBox<String>();
 			project.addItem("Alle");
@@ -835,27 +906,30 @@ public class MainFrame {
 					}
 				}
 			});
-			c.gridy = 0;
 			c.gridx = 1;
+			c.gridwidth = 2;
 			add(project, c);
-			c.gridy = 1;
+			c.gridy++;
 			c.gridx = 0;
+			c.gridwidth = 1;
 			add(new JLabel("Datum von"), c);
 			fromDate = new JDatePicker();
 			fromDate.addKeyListener(listener);
-			c.gridy = 1;
 			c.gridx = 1;
+			c.gridwidth = 2;
 			add(fromDate, c);
-			c.gridy = 2;
+			c.gridy++;
 			c.gridx = 0;
+			c.gridwidth = 1;
 			add(new JLabel("Datum bis"), c);
 			toDate = new JDatePicker();
 			toDate.addKeyListener(listener);
-			c.gridy = 2;
 			c.gridx = 1;
+			c.gridwidth = 2;
 			add(toDate, c);
-			c.gridy = 3;
+			c.gridy++;
 			c.gridx = 0;
+			c.gridwidth = 1;
 			add(new JLabel("Mitarbeiter"), c);
 			user = new JComboBox<String>();
 			user.addItem("Alle");
@@ -863,11 +937,12 @@ public class MainFrame {
 				user.addItem(users[i]);
 			}
 			user.addKeyListener(listener);
-			c.gridy = 3;
 			c.gridx = 1;
+			c.gridwidth = 2;
 			add(user, c);
-			c.gridy = 4;
+			c.gridy++;
 			c.gridx = 0;
+			c.gridwidth = 1;
 			add(new JLabel("Epic"), c);
 			epic = new JComboBox<String>();
 			epic.addItem("Alle");
@@ -875,22 +950,24 @@ public class MainFrame {
 				epic.addItem(epics[i]);
 			}
 			epic.addKeyListener(listener);
-			c.gridy = 4;
 			c.gridx = 1;
+			c.gridwidth = 2;
 			add(epic, c);
-			c.gridy = 5;
+			c.gridy++;
 			c.gridx = 0;
+			c.gridwidth = 1;
 			add(new JLabel("Auftragsnummer"), c);
-			c.gridy = 5;
 			c.gridx = 1;
+			c.gridwidth = 2;
 			ordernumber = new JTextField();
 			ordernumber.addKeyListener(listener);
 			add(ordernumber, c);
-			c.gridy = 6;
+			c.gridy++;
 			c.gridx = 0;
+			c.gridwidth = 1;
 			add(new JLabel("Position"), c);
-			c.gridy = 6;
 			c.gridx = 1;
+			c.gridwidth = 2;
 			position = new JTextField();
 			position.addKeyListener(listener);
 			add(position, c);
@@ -907,6 +984,11 @@ public class MainFrame {
 		private void dialogClosed() {
 			StringBuffer buf = new StringBuffer();
 			boolean hasContent = false;
+			if(taskButton.isSelected()) {
+				currentSearchMode = searchMode.Task;
+			} else if(worklogButton.isSelected()) {
+				currentSearchMode = searchMode.Worklog;
+			}
 			if (project.getSelectedIndex() > 0) {
 				if (hasContent) {
 					buf.append(" and ");
@@ -921,7 +1003,12 @@ public class MainFrame {
 				if (hasContent) {
 					buf.append(" and ");
 				}
-				buf.append("worklogdate >= \"").append(CalendarUtils.getStringToCalendarForREST(c)).append("\"");
+				if(currentSearchMode.equals(searchMode.Task)){
+					buf.append("DueDate");
+				}else if(currentSearchMode.equals(searchMode.Worklog)){
+					buf.append("worklogdate");
+				}
+				buf.append(" >= \"").append(CalendarUtils.getStringToCalendarForREST(c)).append("\"");
 				hasContent = true;
 			}
 			if (toDate.getDate() != null) {
@@ -931,14 +1018,23 @@ public class MainFrame {
 				if (hasContent) {
 					buf.append(" and ");
 				}
-				buf.append("worklogdate <= \"").append(CalendarUtils.getStringToCalendarForREST(c)).append("\"");
+				if(currentSearchMode.equals(searchMode.Task)){
+					buf.append("DueDate");
+				}else if(currentSearchMode.equals(searchMode.Worklog)){
+					buf.append("worklogdate");
+				}
+				buf.append(" <= \"").append(CalendarUtils.getStringToCalendarForREST(c)).append("\"");
 				hasContent = true;
 			}
 			if (user.getSelectedIndex() > 0) {
 				if (hasContent) {
 					buf.append(" and ");
 				}
-				buf.append("worklogauthor = \"").append(user.getSelectedItem()).append("\"");
+				if(currentSearchMode.equals(searchMode.Task)){
+					buf.append("(assignee = \"").append(user.getSelectedItem()).append("\" or creator = \"").append(user.getSelectedItem()).append("\" or responsible = \"").append(user.getSelectedItem()).append("\")");
+				}else if(currentSearchMode.equals(searchMode.Worklog)){
+					buf.append("worklogauthor = \"").append(user.getSelectedItem()).append("\"");
+				}
 				hasContent = true;
 			}
 			if (epic.getSelectedIndex() > 0) {
@@ -964,12 +1060,14 @@ public class MainFrame {
 				buf.append("cf[10031] ~ ").append(position.getText()).append("");
 				hasContent = true;
 			}
-			// mandatory content
-			if (hasContent) {
-				buf.append(" and ");
+			if(currentSearchMode.equals(searchMode.Worklog)){
+				// mandatory content for worklogs
+				if (hasContent) {
+					buf.append(" and ");
+				}
+				buf.append("timespent > 0");
+				hasContent = true;
 			}
-			buf.append("timespent > 0");
-			hasContent = true;
 			searchStringDisplay.setText(buf.toString());
 			startSearch();
 		}
@@ -994,7 +1092,7 @@ public class MainFrame {
 		
 		@Override
 		public int getColumnCount() {
-			return 12;
+			return 13;
 		}
 
 		@Override
@@ -1029,14 +1127,16 @@ public class MainFrame {
 				case 6:
 					return worklogList.get(rowIndex).getOrderposition();
 				case 7:
-					return worklogList.get(rowIndex).getCustomer();
+					return  worklogList.get(rowIndex).isBillable();
 				case 8:
-					return worklogList.get(rowIndex).getSummary();
+					return worklogList.get(rowIndex).getCustomer();
 				case 9:
-					return worklogList.get(rowIndex).getProject();
+					return worklogList.get(rowIndex).getSummary();
 				case 10:
-					return worklogList.get(rowIndex).getEpic();
+					return worklogList.get(rowIndex).getProject();
 				case 11:
+					return worklogList.get(rowIndex).getEpic();
+				case 12:
 					return worklogList.get(rowIndex).getParent();
 			}
 			return "";
@@ -1060,14 +1160,16 @@ public class MainFrame {
 			case 6:
 				return "Position";
 			case 7:
-				return "Kunde";
+				return "Abrechenbar";
 			case 8:
-				return "Ticketname";
+				return "Kunde";
 			case 9:
-				return "Projekt";
+				return "Ticketname";
 			case 10:
-				return "Epic";
+				return "Projekt";
 			case 11:
+				return "Epic";
+			case 12:
 				return "Mutterticket";
 			}
 			return "";
@@ -1078,7 +1180,7 @@ public class MainFrame {
 		
 		@Override
 		public int getColumnCount() {
-			return 13;
+			return 14;
 		}
 
 		@Override
@@ -1109,9 +1211,15 @@ public class MainFrame {
 			case 4:
 				return taskList.get(rowIndex).getResponsible();
 			case 5:
-				return format.format(taskList.get(rowIndex).getDueDate());
+				if(taskList.get(rowIndex).getDueDate()!=null) {
+					return format.format(taskList.get(rowIndex).getDueDate());
+				}
+				return"";
 			case 6:
-				return format.format(taskList.get(rowIndex).getPlannedDate());
+				if(taskList.get(rowIndex).getPlannedDate()!=null) {
+					return format.format(taskList.get(rowIndex).getPlannedDate());
+				}
+			return"";
 			case 7:
 				return taskList.get(rowIndex).getTimeSpent();
 			case 8:
@@ -1121,8 +1229,10 @@ public class MainFrame {
 			case 10:
 				return taskList.get(rowIndex).getOrderposition();
 			case 11:
-				return taskList.get(rowIndex).getEpic();
+				return taskList.get(rowIndex).isBillable();
 			case 12:
+				return taskList.get(rowIndex).getEpic();
+			case 13:
 				return taskList.get(rowIndex).getParent();
 			}
 			return "";
@@ -1154,8 +1264,10 @@ public class MainFrame {
 			case 10:
 				return "Auftragsposition";
 			case 11:
-				return "Epic";
+				return "Abrechenbar";
 			case 12:
+				return "Epic";
+			case 13:
 				return "Mutterticket";
 			}
 			return "";

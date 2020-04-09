@@ -9,6 +9,7 @@ public class Worklog {
 	private long timeSpentSeconds;
 	private String issueKey;
 	private String comment;
+	private boolean billable;
 	private String ordernumber;
 	private String orderposition;
 	private String summary;
@@ -96,5 +97,10 @@ public class Worklog {
 	public void setIssueKey(String issueKey) {
 		this.issueKey = issueKey;
 	}
-	
+	public boolean isBillable() {
+		return billable;
+	}
+	public void setBillable(boolean billable) {
+		this.billable = billable;
+	}
 }

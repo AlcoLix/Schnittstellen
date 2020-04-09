@@ -60,22 +60,22 @@ public class Script {
 				JiraApiHelper.getInstance().appendKeyValue("jql",step.getSearchString());
 				JiraApiHelper.getInstance().appendKeyValue("validateQuery", "warn");
 				JiraApiHelper.getInstance().appendKeyValue("maxResults", "500");
-				JiraApiHelper.getInstance().appendKeyValue("fields", JiraApiHelper.FIELDS_FOR_TASKS);
+				JiraApiHelper.getInstance().appendKeyValue("fields", JiraApiHelper.FIELDS_FOR_WORKLOGS);
 				Hashtable<String, String> header = new Hashtable<String, String>();
 				// Der Auth-Header mit API-Token in base64 encoding
 				header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
 				StringBuffer json = JiraApiHelper.getInstance().sendRequest("GET", header);
-				worklogList = JiraParser.parseSearchResults(json);
+				worklogList = JiraParser.parseWorklogSearchResults(json);
 				int startAt = 0;
 				while ((startAt = JiraParser.nextStartAt(json)) != -1) {
 					JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
 					JiraApiHelper.getInstance().appendKeyValue("jql", step.getSearchString());
 					JiraApiHelper.getInstance().appendKeyValue("validateQuery", "warn");
 					JiraApiHelper.getInstance().appendKeyValue("maxResults", "500");
-					JiraApiHelper.getInstance().appendKeyValue("fields", JiraApiHelper.FIELDS_FOR_TASKS);
+					JiraApiHelper.getInstance().appendKeyValue("fields", JiraApiHelper.FIELDS_FOR_WORKLOGS);
 					JiraApiHelper.getInstance().appendKeyValue("startAt", String.valueOf(startAt));
 					json = JiraApiHelper.getInstance().sendRequest("GET", header);
-					worklogList.addAll(JiraParser.parseSearchResults(json));
+					worklogList.addAll(JiraParser.parseWorklogSearchResults(json));
 				}
 				worklogList = JiraApiHelper.applyFiltersToWorklogList(worklogList, step.getCalculatedStartDate(), step.getCalculatedEndDate(), step.getUser());
 				String filename =step.getSavePath();

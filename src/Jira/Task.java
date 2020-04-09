@@ -12,7 +12,11 @@ public class Task {
 	private String timeSpent;
 	private long timeSpentSeconds;
 	private String timeEstimate;
+	private long timeEstmateSeconds;
+	private String timeEstimateRemaining;
+	private long timeEstmateRemainingSeconds;
 	private String issueKey;
+	private boolean billable;
 	private String ordernumber;
 	private String orderposition;
 	private String parent;
@@ -54,6 +58,24 @@ public class Task {
 	}
 	public void setTimeEstimate(String timeEstimate) {
 		this.timeEstimate = timeEstimate;
+	}
+	public long getTimeEstmateSeconds() {
+		return timeEstmateSeconds;
+	}
+	public void setTimeEstmateSeconds(long timeEstmateSeconds) {
+		this.timeEstmateSeconds = timeEstmateSeconds;
+	}
+	public String getTimeEstimateRemaining() {
+		return timeEstimateRemaining;
+	}
+	public void setTimeEstimateRemaining(String timeEstimateRemaining) {
+		this.timeEstimateRemaining = timeEstimateRemaining;
+	}
+	public long getTimeEstmateRemainingSeconds() {
+		return timeEstmateRemainingSeconds;
+	}
+	public void setTimeEstmateRemainingSeconds(long timeEstmateRemainingSeconds) {
+		this.timeEstmateRemainingSeconds = timeEstmateRemainingSeconds;
 	}
 	public String getTimeSpent() {
 		return timeSpent;
@@ -103,5 +125,10 @@ public class Task {
 	public void setProject(String project) {
 		this.project = project;
 	}
-	
+	public boolean isBillable() {
+		return billable;
+	}
+	public void setBillable(boolean billable) {
+		this.billable = billable;
+	}
 }

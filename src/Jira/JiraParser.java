@@ -15,10 +15,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import Jira.utils.StringUtils;
+import sun.security.action.GetLongAction;
 
 public class JiraParser {
 
-	public static ArrayList<Worklog> parseSearchResults(StringBuffer json) {
+	public static ArrayList<Worklog> parseWorklogSearchResults(StringBuffer json) {
 		ArrayList<Worklog> retval = new ArrayList<Worklog>();
 		JSONObject content = new JSONObject(json.toString());
 		JSONArray issues = content.getJSONArray("issues");
@@ -37,14 +38,66 @@ public class JiraParser {
 			}
 			for (Object sub : subtasks) {
 				JSONObject subtask = (JSONObject) sub;
-				retval.addAll(queryAndParseSubtask(subtask.getString("self"),epic));
+				retval.addAll(queryAndParseWorklogsFromSubtask(subtask.getString("self"),epic));
 			}
 		}
 		return retval;
 	}
-	public static ArrayList<Worklog> queryAndParseSubtask(String subtaskSelflink, String epic) {
+	public static ArrayList<Task> parseTaskSearchResults(StringBuffer json) {
+		ArrayList<Task> retval = new ArrayList<Task>();
+		JSONObject content = new JSONObject(json.toString());
+		JSONArray issues = content.getJSONArray("issues");
+		for (Object object : issues) {
+			JSONObject issue = (JSONObject) object;
+			retval.add(parseTaskFromIssueObject(issue));
+			//query the worklogs of the subtasks, if any
+			JSONObject fields = issue.getJSONObject("fields");
+			JSONArray subtasks = fields.getJSONArray("subtasks");
+			String epic = "";
+			try { 
+				epic = fields.getString("customfield_10014");
+				epic = Epic.getEpic(epic).toString();
+			} catch (JSONException e) {
+				
+			}
+			for (Object sub : subtasks) {
+				JSONObject subtask = (JSONObject) sub;
+				retval.add(queryAndParseTasksFromSubtask(subtask.getString("self"),epic));
+			}
+		}
+		return retval;
+	}
+	public static Task queryAndParseTasksFromSubtask(String subtaskSelflink, String epic) {
 		JiraApiHelper.getInstance().setBaseString(subtaskSelflink);
 		JiraApiHelper.getInstance().appendKeyValue("fields", JiraApiHelper.FIELDS_FOR_SUBTASKS);
+		Hashtable<String, String> header = new Hashtable<String, String>();
+		// Der Auth-Header mit API-Token in base64 encoding
+		header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
+		StringBuffer json = JiraApiHelper.getInstance().sendRequest("GET", header);
+		JSONObject issue = new JSONObject(json.toString());
+		Task t =  parseTaskFromIssueObject(issue);
+		t.setEpic(epic);
+		//Fallback, if the Ordernumber is only set in the Epic
+		String ordernumber = "";
+		if(StringUtils.isEmpty(t.getOrdernumber())&&!StringUtils.isEmpty(epic)) {
+			ordernumber = Epic.getEpic(epic).getOrdernumber();
+		}
+		String orderposition = "";
+		if(StringUtils.isEmpty(t.getOrderposition())&&!StringUtils.isEmpty(epic)) {
+			orderposition = Epic.getEpic(epic).getOrderposition();
+		}
+		if(StringUtils.isEmpty(t.getOrdernumber())) {
+			t.setOrdernumber(ordernumber);
+		}
+		if(StringUtils.isEmpty(t.getOrderposition())) {
+			t.setOrderposition(orderposition);
+		}
+		return t;
+	}
+	
+	public static ArrayList<Worklog> queryAndParseWorklogsFromSubtask(String subtaskSelflink, String epic) {
+		JiraApiHelper.getInstance().setBaseString(subtaskSelflink);
+		JiraApiHelper.getInstance().appendKeyValue("fields", JiraApiHelper.FIELDS_FOR_WORKLOG_SUBTASKS);
 		Hashtable<String, String> header = new Hashtable<String, String>();
 		// Der Auth-Header mit API-Token in base64 encoding
 		header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
@@ -55,11 +108,11 @@ public class JiraParser {
 			worklog.setEpic(epic);
 			//Fallback, if the Ordernumber is only set in the Epic
 			String ordernumber = "";
-			if(StringUtils.isEmpty(worklog.getOrdernumber())) {
+			if(StringUtils.isEmpty(worklog.getOrdernumber())&&!StringUtils.isEmpty(epic)) {
 				ordernumber = Epic.getEpic(epic).getOrdernumber();
 			}
 			String orderposition = "";
-			if(StringUtils.isEmpty(worklog.getOrderposition())) {
+			if(StringUtils.isEmpty(worklog.getOrderposition())&&!StringUtils.isEmpty(epic)) {
 				orderposition = Epic.getEpic(epic).getOrderposition();
 			}
 			if(StringUtils.isEmpty(worklog.getOrdernumber())) {
@@ -82,16 +135,15 @@ public class JiraParser {
 		}
 		return name;
 	}
-	public static ArrayList<Worklog> parseWorklogsFromIssueObject(JSONObject issue) {
-		ArrayList<Worklog>retval = new ArrayList<Worklog>();
+	public static Task parseTaskFromIssueObject(JSONObject issue) {
 		String key = issue.getString("key");
 		JSONObject fields = issue.getJSONObject("fields");
-		JSONObject worklog = fields.getJSONObject("worklog");
-		if(worklog.getInt("total")>worklog.getInt("maxResults")) {
-			StringBuffer json = JiraApiHelper.getInstance().getWorklogsArray2Issue(key);
-			worklog = new JSONObject(json.toString());
+		boolean billing = false;
+		try {
+			billing = fields.getJSONArray("customfield_10029").getJSONObject(0).getString("value").equalsIgnoreCase("Billable");
+		} catch (JSONException e) {
+			
 		}
-		JSONArray worklogs = worklog.getJSONArray("worklogs");
 		String ordernumber ="";
 		try {
 			ordernumber= fields.getString("customfield_10030");
@@ -125,16 +177,216 @@ public class JiraParser {
 		String epic = "";
 		try { 
 			epic = fields.getString("customfield_10014");
-			if(Epic.getEpic(epic) == null) {
-				System.out.println("Error with "+epic);
+			if(Epic.getEpic(epic) != null) {
+				epic = Epic.getEpic(epic).toString();
+				if(StringUtils.isEmpty(ordernumber)) {
+					//Fallback, if the Ordernumber is only set in the Epic
+					ordernumber = Epic.getEpic(epic).getOrdernumber();
+				}
+				if(StringUtils.isEmpty(orderposition)) {
+					orderposition = Epic.getEpic(epic).getOrderposition();
+				}
 			}
-			epic = Epic.getEpic(epic).toString();
-			if(StringUtils.isEmpty(ordernumber)) {
-				//Fallback, if the Ordernumber is only set in the Epic
-				ordernumber = Epic.getEpic(epic).getOrdernumber();
+		} catch (JSONException e) {
+			
+		}
+		String project = "";
+		try { 
+			project = fields.getJSONObject("project").getString("name");
+		} catch (JSONException e) {
+			
+		}
+		String parent = "";
+		try { 
+			parent = fields.getJSONObject("parent").getString("key");
+		} catch (JSONException e) {
+			
+		}
+		Date duedate = null;
+		try {
+			String due = fields.getString("duedate");
+			Calendar c = Calendar.getInstance();
+			c.clear();
+			c.set(Calendar.YEAR, Integer.parseInt(due.substring(0, 4)));
+			//-1 because in the json, the first month is 1, in Calendar it is 0
+			c.set(Calendar.MONTH, Integer.parseInt(due.substring(5, 7))-1);
+			c.set(Calendar.DAY_OF_MONTH, Integer.parseInt(due.substring(8, 10)));
+			duedate = c.getTime();
+		} catch (JSONException e) {
+			
+		}
+		Date plandate = null;
+		try {
+			//Somehow there are two different fields for the planned date.
+			String plan="";
+			if(fields.has("customfield_10039")){
+				plan = fields.getString("customfield_10039");
 			}
-			if(StringUtils.isEmpty(orderposition)) {
-				orderposition = Epic.getEpic(epic).getOrderposition();
+			if(StringUtils.isEmpty(plan)){
+				plan = fields.getString("customfield_10034");
+			}
+			if(!StringUtils.isEmpty(plan)){
+				Calendar c = Calendar.getInstance();
+				c.clear();
+				c.set(Calendar.YEAR, Integer.parseInt(plan.substring(0, 4)));
+				//-1 because in the json, the first month is 1, in Calendar it is 0
+				c.set(Calendar.MONTH, Integer.parseInt(plan.substring(5, 7))-1);
+				c.set(Calendar.DAY_OF_MONTH, Integer.parseInt(plan.substring(8, 10)));
+				plandate = c.getTime();
+			}
+		} catch (JSONException e) {
+			
+		}
+		String creator = "";
+		try { 
+			creator = fields.getJSONObject("creator").getString("displayName");
+		} catch (JSONException e) {
+			
+		}
+		String responsible = "";
+		try { 
+			responsible = fields.getJSONObject("customfield_10035").getString("displayName");
+		} catch (JSONException e) {
+			
+		}
+		String assignee = "";
+		try { 
+			assignee = fields.getJSONObject("assignee").getString("displayName");
+		} catch (JSONException e) {
+			
+		}
+		long timespentseconds = 0;
+		String timespent = "";
+		try { 
+			timespentseconds = fields.getLong("timespent");
+			timespent = getWordtimeForLong(timespentseconds);
+		} catch (JSONException e) {
+			
+		}
+		long originalEstimateSeconds = 0;
+		String originalEstimate = "";
+		try { 
+			originalEstimateSeconds = fields.getLong("timespent");
+			originalEstimate = getWordtimeForLong(originalEstimateSeconds);
+		} catch (JSONException e) {
+			
+		}
+		long remainingEstimateSeconds = 0;
+		String remainingEstimate = "";
+		try { 
+			remainingEstimateSeconds = fields.getLong("timespent");
+			remainingEstimate = getWordtimeForLong(remainingEstimateSeconds);
+		} catch (JSONException e) {
+			
+		}
+		Task t = new Task();
+		t.setAssignee(assignee);
+		t.setBillable(billing);
+		t.setDueDate(duedate);
+		t.setEpic(epic);
+		t.setIssueKey(key);
+		t.setOrdernumber(ordernumber);
+		t.setOrderposition(orderposition);
+		t.setParent(parent);
+		t.setPlannedDate(plandate);
+		t.setProject(project);
+		t.setResponsible(responsible);
+		t.setSummary(summary);
+		t.setTimeEstimate(originalEstimate);
+		t.setTimeEstmateSeconds(originalEstimateSeconds);
+		t.setTimeSpent(timespent);
+		t.setTimeEstmateSeconds(timespentseconds);
+		t.setTimeEstimateRemaining(remainingEstimate);
+		t.setTimeEstmateRemainingSeconds(remainingEstimateSeconds);
+		return t;
+	}
+	private static String getWordtimeForLong(long timeInSeconds) {
+		StringBuffer retval = new StringBuffer();
+		long temp = timeInSeconds % 60;
+		timeInSeconds /= 60;
+		if(temp!=0) {
+			retval.append(temp).append("s");
+		}
+		temp = timeInSeconds % 60;
+		timeInSeconds /= 60;
+		if(temp!=0) {
+			retval.insert(0,"m ").insert(0, temp);
+		}
+		temp = timeInSeconds % 60;
+		timeInSeconds /= 60;
+		if(temp!=0) {
+			retval.insert(0,"h ").insert(0, temp);
+		}
+		temp = timeInSeconds % 8;
+		timeInSeconds /= 8;
+		if(temp!=0) {
+			retval.insert(0,"d ").insert(0, temp);
+		}
+		temp = timeInSeconds % 5;
+		timeInSeconds /= 5;
+		if(temp!=0) {
+			retval.insert(0,"w ").insert(0, temp);
+		}
+		return retval.toString();
+	}
+	public static ArrayList<Worklog> parseWorklogsFromIssueObject(JSONObject issue) {
+		ArrayList<Worklog>retval = new ArrayList<Worklog>();
+		String key = issue.getString("key");
+		JSONObject fields = issue.getJSONObject("fields");
+		JSONObject worklog = fields.getJSONObject("worklog");
+		if(worklog.getInt("total")>worklog.getInt("maxResults")) {
+			StringBuffer json = JiraApiHelper.getInstance().getWorklogsArray2Issue(key);
+			worklog = new JSONObject(json.toString());
+		}
+		JSONArray worklogs = worklog.getJSONArray("worklogs");
+		boolean billing = false;
+		try {
+			billing = fields.getJSONArray("customfield_10029").getJSONObject(0).getString("value").equalsIgnoreCase("Billable");
+		} catch (JSONException e) {
+			
+		}
+		String ordernumber ="";
+		try {
+			ordernumber= fields.getString("customfield_10030");
+		} catch (JSONException e) {
+			
+		}
+		String summary ="";
+		try { 
+			summary= fields.getString("summary");
+		} catch (JSONException e) {
+			
+		}
+		String orderposition = "";
+		try { 
+			orderposition = fields.getString("customfield_10031");
+		} catch (JSONException e) {
+			
+		}
+		String customer = "";
+		try {
+			JSONArray customerList = fields.getJSONArray("customfield_10033");
+			for (int i = 0; i < customerList.length(); i++) {
+				customer += customerList.getString(i);
+				if (i+1<customerList.length()) {
+					customer += ", ";
+				}
+			}
+		} catch (JSONException e) {
+			
+		}
+		String epic = "";
+		try { 
+			epic = fields.getString("customfield_10014");
+			if(Epic.getEpic(epic) != null) {
+				epic = Epic.getEpic(epic).toString();
+				if(StringUtils.isEmpty(ordernumber)) {
+					//Fallback, if the Ordernumber is only set in the Epic
+					ordernumber = Epic.getEpic(epic).getOrdernumber();
+				}
+				if(StringUtils.isEmpty(orderposition)) {
+					orderposition = Epic.getEpic(epic).getOrderposition();
+				}
 			}
 		} catch (JSONException e) {
 			
@@ -180,6 +432,7 @@ public class JiraParser {
 			jiraWorklog.setTimeSpent(timeSpent);
 			jiraWorklog.setUser(name);
 			jiraWorklog.setTimeSpentSeconds(timeSpentSeconds);
+			jiraWorklog.setBillable(billing);
 			jiraWorklog.setOrdernumber(ordernumber);
 			jiraWorklog.setOrderposition(orderposition);
 			jiraWorklog.setCustomer(customer);
@@ -271,6 +524,7 @@ public class JiraParser {
 		csvString.append("Bemerkung").append(";");
 		csvString.append("Auftrag").append(";");
 		csvString.append("Position").append(";");
+		csvString.append("Abrechenbar").append(";");
 		csvString.append("Kunde").append(";");
 		csvString.append("Ticketname").append(";");
 		csvString.append("Projekt").append(";");
@@ -288,6 +542,7 @@ public class JiraParser {
 			csvString.append("\"").append(worklog.getComment().replaceAll("\r\n", " ")).append("\"").append(";");
 			csvString.append(worklog.getOrdernumber()).append(";");
 			csvString.append(worklog.getOrderposition()).append(";");
+			csvString.append(worklog.isBillable()).append(";");
 			csvString.append(worklog.getCustomer()).append(";");
 			csvString.append(worklog.getSummary()).append(";");
 			csvString.append(worklog.getProject()).append(";");
@@ -297,10 +552,75 @@ public class JiraParser {
 		}
 		return csvString;
 	}
+
+	public static StringBuffer parseTasksToCsvString(ArrayList<Task> tasks) {
+		StringBuffer csvString = new StringBuffer();
+		csvString.append("Ticket").append(";");
+		csvString.append("Verantwortlicher").append(";");
+		csvString.append("Bearbeiter").append(";");
+		csvString.append("Fälligkeit").append(";");
+		csvString.append("geplante Fertigstellung").append(";");
+		csvString.append("Auftrag").append(";");
+		csvString.append("Position").append(";");
+		csvString.append("Abrechenbar").append(";");
+		csvString.append("Ticketname").append(";");
+		csvString.append("Projekt").append(";");
+		csvString.append("Epic").append(";");
+		csvString.append("Mutterticket").append(";");
+		csvString.append("geplante Zeit").append(";");
+		csvString.append("geplante Zeit in Sekunden").append(";");
+		csvString.append("gebuchte Zeit").append(";");
+		csvString.append("gebuchte Zeit in Sekunden").append(";");
+		csvString.append("verbleibende Zeit").append(";");
+		csvString.append("verbleibende Zeit in Sekunden").append("\r\n");
+		for (Task task : tasks) {
+			SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy");
+			csvString.append(task.getIssueKey()).append(";");
+			csvString.append(task.getResponsible()).append(";");
+			csvString.append(task.getAssignee()).append(";");
+			if(task.getDueDate()!=null) {
+				csvString.append(format.format(task.getDueDate())).append(";");
+			}else {
+				csvString.append(";");
+			}
+			if(task.getPlannedDate()!=null) {
+				csvString.append(format.format(task.getPlannedDate())).append(";");
+			}else {
+				csvString.append(";");
+			}
+			csvString.append(task.getOrdernumber()).append(";");
+			csvString.append(task.getOrderposition()).append(";");
+			csvString.append(task.isBillable()).append(";");
+			csvString.append(task.getSummary()).append(";");
+			csvString.append(task.getProject()).append(";");
+			csvString.append(task.getEpic()).append(";");
+			csvString.append(task.getParent()).append(";");
+			csvString.append(task.getTimeEstimate()).append(";");
+			csvString.append(task.getTimeEstmateSeconds()).append(";");
+			csvString.append(task.getTimeSpent()).append(";");
+			csvString.append(task.getTimeSpentSeconds()).append(";");
+			csvString.append(task.getTimeEstimateRemaining()).append(";");
+			csvString.append(task.getTimeEstmateRemainingSeconds()).append("\r\n");
+		}
+		return csvString;
+	}
 	
 	public static void writeWorklogsToFile(ArrayList<Worklog> worklogs, File f) {
 		try {
 			StringBuffer buf = JiraParser.parseWorklogsToCsvString(worklogs);
+			FileWriter writer = new FileWriter(f, false);
+			writer.write(buf.toString());
+			writer.close();
+			writer = new FileWriter(f, false);
+			writer.write(buf.toString());
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	public static void writeTasksToFile(ArrayList<Task> Tasks, File f) {
+		try {
+			StringBuffer buf = JiraParser.parseTasksToCsvString(Tasks);
 			FileWriter writer = new FileWriter(f, false);
 			writer.write(buf.toString());
 			writer.close();
