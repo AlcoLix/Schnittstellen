@@ -78,7 +78,7 @@ public class JiraApiHelper extends ApiHelper {
 			setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
 			appendKeyValue("validateQuery", "warn");
 			appendKeyValue("fields", FIELDS_FOR_EPICS);
-			appendKeyValue("jql", "type = Epic and category != Test");
+			appendKeyValue("jql", "type = Epic");
 			Hashtable<String, String> header = new Hashtable<String, String>();
 			// Der Auth-Header mit API-Token in base64 encoding
 			header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
@@ -90,7 +90,7 @@ public class JiraApiHelper extends ApiHelper {
 				setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
 				appendKeyValue("validateQuery", "warn");
 				appendKeyValue("fields", FIELDS_FOR_EPICS);
-				appendKeyValue("jql", "type = Epic and category != Test");
+				appendKeyValue("jql", "type = Epic");
 				appendKeyValue("maxResults", "100");
 				appendKeyValue("startAt", String.valueOf(startAt));
 				json = JiraApiHelper.getInstance().sendRequest("GET", header);

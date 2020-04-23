@@ -15,7 +15,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import Jira.utils.StringUtils;
-import sun.security.action.GetLongAction;
 
 public class JiraParser {
 
@@ -32,7 +31,9 @@ public class JiraParser {
 			String epic = "";
 			try { 
 				epic = fields.getString("customfield_10014");
-				epic = Epic.getEpic(epic).toString();
+				if(Epic.getEpic(epic)!=null) {
+					epic = Epic.getEpic(epic).toString();
+				}
 			} catch (JSONException e) {
 				
 			}
@@ -295,7 +296,7 @@ public class JiraParser {
 		t.setTimeEstimate(originalEstimate);
 		t.setTimeEstmateSeconds(originalEstimateSeconds);
 		t.setTimeSpent(timespent);
-		t.setTimeEstmateSeconds(timespentseconds);
+		t.setTimeSpentSeconds(timespentseconds);
 		t.setTimeEstimateRemaining(remainingEstimate);
 		t.setTimeEstmateRemainingSeconds(remainingEstimateSeconds);
 		return t;
@@ -478,25 +479,28 @@ public class JiraParser {
 		JSONArray values = content.getJSONArray("issues");
 		for (Object object : values) {
 			JSONObject value = (JSONObject) object;
-			Epic e = new Epic();
-			e.setKey(value.getString("key"));
-			e.setName(value.getJSONObject("fields").getString("customfield_10011"));
-			e.setProject(value.getJSONObject("fields").getJSONObject("project").getString("name"));
-			String ordernumber ="";
-			try { 
-				ordernumber= value.getJSONObject("fields").getString("customfield_10030");
-			} catch (JSONException ex) {
-				
+			//filters out next gen projects
+			if(value.getJSONObject("fields").has("customfield_10011")) {
+				Epic e = new Epic();
+				e.setKey(value.getString("key"));
+				e.setName(value.getJSONObject("fields").getString("customfield_10011"));
+				e.setProject(value.getJSONObject("fields").getJSONObject("project").getString("name"));
+				String ordernumber ="";
+				try { 
+					ordernumber= value.getJSONObject("fields").getString("customfield_10030");
+				} catch (JSONException ex) {
+					
+				}
+				e.setOrdernumber(ordernumber);
+				String orderposition = "";
+				try { 
+					orderposition = value.getJSONObject("fields").getString("customfield_10031");
+				} catch (JSONException ex) {
+					
+				}
+				e.setOrderposition(orderposition);
+				Epic.addEpic(e);
 			}
-			e.setOrdernumber(ordernumber);
-			String orderposition = "";
-			try { 
-				orderposition = value.getJSONObject("fields").getString("customfield_10031");
-			} catch (JSONException ex) {
-				
-			}
-			e.setOrderposition(orderposition);
-			Epic.addEpic(e);
 		}
 	}
 	/**
