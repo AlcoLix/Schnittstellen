@@ -548,7 +548,7 @@ public class JiraParser {
 			csvString.append(worklog.getOrderposition()).append(";");
 			csvString.append(worklog.isBillable()).append(";");
 			csvString.append(worklog.getCustomer()).append(";");
-			csvString.append(worklog.getSummary()).append(";");
+			csvString.append("\"").append(worklog.getSummary()).append("\"").append(";");
 			csvString.append(worklog.getProject()).append(";");
 			csvString.append(worklog.getEpic()).append(";");
 			csvString.append(worklog.getParent()).append(";");
@@ -595,7 +595,7 @@ public class JiraParser {
 			csvString.append(task.getOrdernumber()).append(";");
 			csvString.append(task.getOrderposition()).append(";");
 			csvString.append(task.isBillable()).append(";");
-			csvString.append(task.getSummary()).append(";");
+			csvString.append("\"").append(task.getSummary()).append("\"").append(";");
 			csvString.append(task.getProject()).append(";");
 			csvString.append(task.getEpic()).append(";");
 			csvString.append(task.getParent()).append(";");

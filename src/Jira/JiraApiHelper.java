@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Hashtable;
 
+import Jira.gui.MainFrame;
 import Jira.utils.CalendarUtils;
 import Jira.utils.StringUtils;
 import main.ApiHelper;
@@ -56,6 +57,7 @@ public class JiraApiHelper extends ApiHelper {
 					output.append(line).append("\r\n");
 				}
 				conn.disconnect();
+				MainFrame.addDebugLine(ApiHelper.getInstance().getUrlString().toString());
 			} catch (IOException e) // Fehlerhandling, IOException ist höchste Instanz zum Fehler abfangen
 				{
 				e.printStackTrace(); //das Gleiche wie System.err

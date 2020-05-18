@@ -44,6 +44,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.SpinnerNumberModel;
@@ -79,6 +80,8 @@ public class MainFrame {
 	private Thread searchThread;
 	private searchMode currentSearchMode = searchMode.Worklog;
 	private JPanel contentPanel;
+	private JDialog debugDialog;
+	private JTextArea debugText;
 	
 	private enum searchMode{
 		Worklog, Task;
@@ -178,6 +181,14 @@ public class MainFrame {
 			}
 		});
 		scripting.add(executeScript);
+		JMenuItem enableDebugging = new JMenuItem("Debug Modus");
+		enableDebugging.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				openDebugging();
+			}
+		});
+		scripting.add(enableDebugging);
 	}
 
 	private void initContent() {
@@ -423,6 +434,25 @@ public class MainFrame {
 			JOptionPane.showMessageDialog(frame, "Keine Daten gefunden");
 		}
 	}
+	
+	private void openDebugging() {
+		if(debugDialog != null) {
+			debugDialog.setVisible(true);
+		} else {
+			debugDialog = new JDialog();
+			debugText = new JTextArea();
+			debugDialog.add(new JScrollPane(debugText));
+			debugDialog.pack();
+			debugDialog.setVisible(true);
+		}
+	}
+	
+	public static void addDebugLine(String text) {
+		if(getInstance().debugText != null) {
+			getInstance().debugText.append(text);
+			getInstance().debugText.append("\r\n");
+		}
+	}
 
 	private void exportToFile() {
 		if(currentSearchMode.equals(searchMode.Worklog)) {
@@ -468,12 +498,12 @@ public class MainFrame {
 	private static MainFrame instance;
 
 	private MainFrame() {
-		initFrame();
 	}
 
 	public static MainFrame getInstance() {
 		if (instance == null) {
 			instance = new MainFrame();
+			instance.initFrame();
 		}
 		return instance;
 	}
