@@ -18,6 +18,13 @@ import Jira.utils.StringUtils;
 
 public class JiraParser {
 
+	public static ArrayList<AureaWorklog> parseAureaSearchResults(StringBuffer json){
+		ArrayList<AureaWorklog> retval = new ArrayList<AureaWorklog>();
+		JSONObject content = new JSONObject(json.toString());
+		//TODO fill with data
+		return retval;
+	}
+	
 	public static ArrayList<Worklog> parseWorklogSearchResults(StringBuffer json) {
 		ArrayList<Worklog> retval = new ArrayList<Worklog>();
 		JSONObject content = new JSONObject(json.toString());
@@ -517,6 +524,14 @@ public class JiraParser {
 			return start+max; 
 		}
 		return -1;
+	}
+	public static String nextPage(StringBuffer json) {
+		JSONObject content = new JSONObject(json.toString());
+		String next = content.getString("nextPage");
+		if(content.getBoolean("lastPage")) {
+			return null;
+		}
+		return next;
 	}
 	public static StringBuffer parseWorklogsToCsvString(ArrayList<Worklog> worklogs) {
 		StringBuffer csvString = new StringBuffer();

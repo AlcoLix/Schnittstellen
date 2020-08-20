@@ -56,6 +56,7 @@ import javax.swing.event.DocumentListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableRowSorter;
 
+import Jira.AureaWorklog;
 import Jira.JiraApiHelper;
 import Jira.JiraParser;
 import Jira.Task;
@@ -75,7 +76,9 @@ public class MainFrame {
 	private SettingsDialog settingsDialog;
 	private JTable worklogTable;
 	private JTable taskTable;
+	private JTable aureaTable;
 	private ArrayList<Worklog> worklogList = new ArrayList<Worklog>();
+	private ArrayList<AureaWorklog> aureaList = new ArrayList<AureaWorklog>();
 	private ArrayList<Task> taskList = new ArrayList<Task>();
 	private Thread searchThread;
 	private searchMode currentSearchMode = searchMode.Worklog;
@@ -84,7 +87,7 @@ public class MainFrame {
 	private JTextArea debugText;
 	
 	private enum searchMode{
-		Worklog, Task;
+		Worklog, Task, Aurea;
 	}
 
 	private void initFrame() {
@@ -205,6 +208,8 @@ public class MainFrame {
 		contentPanel.add(worklogPanel, "Worklog");
 		JPanel taskPanel = initTaskPanel();
 		contentPanel.add(taskPanel,"Task");
+		JPanel aureaPanel = initAureaPanel();
+		contentPanel.add(aureaPanel,"Aurea");
 		panel.add(contentPanel, BorderLayout.CENTER);
 	}
 	@SuppressWarnings("serial")
@@ -323,6 +328,62 @@ public class MainFrame {
 		taskPanel.add(scrollPane);
 		return taskPanel;
 	}
+	@SuppressWarnings("serial")
+	private JPanel initAureaPanel(){
+		JPanel aureaPanel = new JPanel();
+		aureaTable = new JTable(new AureaTableModel()) {
+
+			// Implement table cell tool tips.
+			public String getToolTipText(MouseEvent e) {
+				String tip = null;
+				java.awt.Point p = e.getPoint();
+				int rowIndex = rowAtPoint(p);
+				int colIndex = columnAtPoint(p);
+
+				try {
+					tip = getValueAt(rowIndex, colIndex).toString();
+				} catch (RuntimeException e1) {
+					// catch null pointer exception if mouse is over an empty line
+				}
+
+				return tip;
+			}
+		};
+		aureaTable.getColumnModel().getColumn(0).setPreferredWidth(100);
+		aureaTable.getColumnModel().getColumn(1).setPreferredWidth(125);
+		aureaTable.getColumnModel().getColumn(2).setPreferredWidth(50);
+		aureaTable.getColumnModel().getColumn(3).setPreferredWidth(75);
+		aureaTable.getColumnModel().getColumn(4).setPreferredWidth(75);
+		aureaTable.getColumnModel().getColumn(5).setPreferredWidth(50);
+		aureaTable.getColumnModel().getColumn(6).setPreferredWidth(50);
+		aureaTable.getColumnModel().getColumn(7).setPreferredWidth(30);
+		aureaTable.getColumnModel().getColumn(8).setPreferredWidth(200);
+		aureaTable.getColumnModel().getColumn(9).setPreferredWidth(200);
+		aureaTable.getColumnModel().getColumn(10).setPreferredWidth(75);
+		aureaTable.getColumnModel().getColumn(11).setPreferredWidth(75);
+		aureaTable.getColumnModel().getColumn(12).setPreferredWidth(75);
+		aureaTable.setAutoCreateRowSorter(true);
+		JScrollPane scrollPane = new JScrollPane(aureaTable);
+		scrollPane.setPreferredSize(new Dimension(1180, 600));
+		scrollPane.setMinimumSize(new Dimension(1180, 600));
+		
+		//Initializing the row sorter
+		TableRowSorter<AureaTableModel> sorter = new TableRowSorter<AureaTableModel>((AureaTableModel)aureaTable.getModel());
+		aureaTable.setRowSorter(sorter);
+		sorter.setComparator(1, new Comparator<String>() {
+			@Override
+			public int compare(String o1, String o2) {
+				//Cut the date String into pieces and reassamble for correct default sorting
+				StringBuffer s1 = new StringBuffer(o1.substring(6,10));
+				s1.append(o1.substring(3, 5)).append(o1.substring(0,2)).append(o1.substring(10));
+				StringBuffer s2 = new StringBuffer(o2.substring(6,10));
+				s2.append(o2.substring(3, 5)).append(o2.substring(0,2)).append(o2.substring(10));
+				return s1.toString().compareTo(s2.toString());
+			}
+		});
+		aureaPanel.add(scrollPane);
+		return aureaPanel;
+	}
 
 	private void startSearch() {
 		if(searchThread!=null&&searchThread.isAlive()) {
@@ -334,9 +395,13 @@ public class MainFrame {
 				String title = frame.getTitle();
 				frame.setTitle(title+" ...Suche läuft...");
 				JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
-				JiraApiHelper.getInstance().appendKeyValue("jql", searchStringDisplay.getText());
-				JiraApiHelper.getInstance().appendKeyValue("validateQuery", "warn");
-				JiraApiHelper.getInstance().appendKeyValue("maxResults", "500");
+				if(currentSearchMode.equals(searchMode.Aurea)){
+					JiraApiHelper.getInstance().appendKeyValue(searchStringDisplay.getText().split("=")[0], searchStringDisplay.getText().split("=")[1]);
+					JiraApiHelper.getInstance().appendKeyValue("validateQuery", "warn");
+					JiraApiHelper.getInstance().appendKeyValue("maxResults", "500");
+				} else  {
+					JiraApiHelper.getInstance().appendKeyValue("jql", searchStringDisplay.getText());
+				}
 				if(currentSearchMode.equals(searchMode.Task)) {
 					JiraApiHelper.getInstance().appendKeyValue("fields", JiraApiHelper.FIELDS_FOR_TASKS);
 				}else if(currentSearchMode.equals(searchMode.Worklog)) {
@@ -345,29 +410,45 @@ public class MainFrame {
 				Hashtable<String, String> header = new Hashtable<String, String>();
 				// Der Auth-Header mit API-Token in base64 encoding
 				header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
-				StringBuffer json = JiraApiHelper.getInstance().sendRequest("GET", header);
+				StringBuffer json;
+				if(currentSearchMode.equals(searchMode.Aurea)){
+					json = JiraApiHelper.getInstance().sendRequest("POST", header);
+				} else {
+					json = JiraApiHelper.getInstance().sendRequest("GET", header);
+				}
 				if(currentSearchMode.equals(searchMode.Task)) {
 					taskList = JiraParser.parseTaskSearchResults(json);
-				}else if(currentSearchMode.equals(searchMode.Worklog)) {
+				} else if(currentSearchMode.equals(searchMode.Worklog)) {
 					worklogList = JiraParser.parseWorklogSearchResults(json);
+				} else if(currentSearchMode.equals(searchMode.Aurea)) {
+					aureaList = JiraParser.parseAureaSearchResults(json);
 				}
-				int startAt = 0;
-				while ((startAt = JiraParser.nextStartAt(json)) != -1) {
-					JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
-					JiraApiHelper.getInstance().appendKeyValue("jql", searchStringDisplay.getText());
-					JiraApiHelper.getInstance().appendKeyValue("validateQuery", "warn");
-					JiraApiHelper.getInstance().appendKeyValue("maxResults", "500");
-					if(currentSearchMode.equals(searchMode.Task)) {
-						JiraApiHelper.getInstance().appendKeyValue("fields", JiraApiHelper.FIELDS_FOR_TASKS);
-					}else if(currentSearchMode.equals(searchMode.Worklog)) {
-						JiraApiHelper.getInstance().appendKeyValue("fields", JiraApiHelper.FIELDS_FOR_WORKLOGS);	
+				if(currentSearchMode.equals(searchMode.Aurea)) {
+					String nextPage;
+					while((nextPage = JiraParser.nextPage(json)) != null) {
+						JiraApiHelper.getInstance().setBaseString(nextPage);
+						json = JiraApiHelper.getInstance().sendRequest("POST", header);
+						aureaList.addAll(JiraParser.parseAureaSearchResults(json));
 					}
-					JiraApiHelper.getInstance().appendKeyValue("startAt", String.valueOf(startAt));
-					json = JiraApiHelper.getInstance().sendRequest("GET", header);
-					if(currentSearchMode.equals(searchMode.Task)) {
-						taskList.addAll(JiraParser.parseTaskSearchResults(json));
-					}else if(currentSearchMode.equals(searchMode.Worklog)) {
-						worklogList.addAll(JiraParser.parseWorklogSearchResults(json));
+				} else {
+					int startAt = 0;
+					while ((startAt = JiraParser.nextStartAt(json)) != -1) {
+						JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
+						JiraApiHelper.getInstance().appendKeyValue("jql", searchStringDisplay.getText());
+						JiraApiHelper.getInstance().appendKeyValue("validateQuery", "warn");
+						JiraApiHelper.getInstance().appendKeyValue("maxResults", "500");
+						if(currentSearchMode.equals(searchMode.Task)) {
+							JiraApiHelper.getInstance().appendKeyValue("fields", JiraApiHelper.FIELDS_FOR_TASKS);
+						}else if(currentSearchMode.equals(searchMode.Worklog)) {
+							JiraApiHelper.getInstance().appendKeyValue("fields", JiraApiHelper.FIELDS_FOR_WORKLOGS);	
+						}
+						JiraApiHelper.getInstance().appendKeyValue("startAt", String.valueOf(startAt));
+						json = JiraApiHelper.getInstance().sendRequest("GET", header);
+						if(currentSearchMode.equals(searchMode.Task)) {
+							taskList.addAll(JiraParser.parseTaskSearchResults(json));
+						}else if(currentSearchMode.equals(searchMode.Worklog)) {
+							worklogList.addAll(JiraParser.parseWorklogSearchResults(json));
+						}
 					}
 				}
 				if (settingsDialog != null) {
@@ -383,6 +464,9 @@ public class MainFrame {
 				}else if(currentSearchMode.equals(searchMode.Worklog)) {
 					worklogTable.revalidate();
 					((CardLayout) contentPanel.getLayout()).show(contentPanel, "Worklog");
+				}else if(currentSearchMode.equals(searchMode.Aurea)){
+					aureaTable.revalidate();
+					((CardLayout) contentPanel.getLayout()).show(contentPanel, "Aurea");
 				}
 				frame.setTitle(title);
 			}
@@ -871,6 +955,7 @@ public class MainFrame {
 	private class SettingsDialog extends JDialog {
 		private JRadioButton worklogButton;
 		private JRadioButton taskButton;
+		private JRadioButton aureaButton;
 		private ButtonGroup typeGroup;
 		private JComboBox<String> project;
 		private JDatePicker fromDate;
@@ -910,6 +995,10 @@ public class MainFrame {
 			taskButton = new JRadioButton("Ticket");
 			typeGroup.add(taskButton);
 			add(taskButton,c);
+			c.gridx = 3;
+			aureaButton = new JRadioButton("Aurea");
+			typeGroup.add(aureaButton);
+			add(aureaButton,c);
 			c.gridy++;
 			c.gridx= 0;
 			add(new JLabel("Projekt"), c);
@@ -1018,6 +1107,8 @@ public class MainFrame {
 				currentSearchMode = searchMode.Task;
 			} else if(worklogButton.isSelected()) {
 				currentSearchMode = searchMode.Worklog;
+			} else if(aureaButton.isSelected()) {
+				currentSearchMode = searchMode.Aurea;
 			}
 			if (project.getSelectedIndex() > 0) {
 				if (hasContent) {
@@ -1035,68 +1126,74 @@ public class MainFrame {
 				}
 				if(currentSearchMode.equals(searchMode.Task)){
 					buf.append("DueDate");
+					buf.append(" >= \"").append(CalendarUtils.getStringToCalendarForREST(c)).append("\"");
 				}else if(currentSearchMode.equals(searchMode.Worklog)){
 					buf.append("worklogdate");
-				}
-				buf.append(" >= \"").append(CalendarUtils.getStringToCalendarForREST(c)).append("\"");
-				hasContent = true;
-			}
-			if (toDate.getDate() != null) {
-				Date d = toDate.getDate();
-				Calendar c = Calendar.getInstance();
-				c.setTime(d);
-				if (hasContent) {
-					buf.append(" and ");
-				}
-				if(currentSearchMode.equals(searchMode.Task)){
-					buf.append("DueDate");
-				}else if(currentSearchMode.equals(searchMode.Worklog)){
-					buf.append("worklogdate");
-				}
-				buf.append(" <= \"").append(CalendarUtils.getStringToCalendarForREST(c)).append("\"");
-				hasContent = true;
-			}
-			if (user.getSelectedIndex() > 0) {
-				if (hasContent) {
-					buf.append(" and ");
-				}
-				if(currentSearchMode.equals(searchMode.Task)){
-					buf.append("(assignee = \"").append(user.getSelectedItem()).append("\" or creator = \"").append(user.getSelectedItem()).append("\" or responsible = \"").append(user.getSelectedItem()).append("\")");
-				}else if(currentSearchMode.equals(searchMode.Worklog)){
-					buf.append("worklogauthor = \"").append(user.getSelectedItem()).append("\"");
+					buf.append(" >= \"").append(CalendarUtils.getStringToCalendarForREST(c)).append("\"");
+				}else if(currentSearchMode.equals(searchMode.Aurea)){
+					buf.append("since");
+					buf.append(" = ").append(String.valueOf(c.getTimeInMillis()));
 				}
 				hasContent = true;
 			}
-			if (epic.getSelectedIndex() > 0) {
-				if (hasContent) {
-					buf.append(" and ");
+			if(!currentSearchMode.equals(searchMode.Aurea)) {
+				if (toDate.getDate() != null) {
+					Date d = toDate.getDate();
+					Calendar c = Calendar.getInstance();
+					c.setTime(d);
+					if (hasContent) {
+						buf.append(" and ");
+					}
+					if(currentSearchMode.equals(searchMode.Task)){
+						buf.append("DueDate");
+					}else if(currentSearchMode.equals(searchMode.Worklog)){
+						buf.append("worklogdate");
+					}
+					buf.append(" <= \"").append(CalendarUtils.getStringToCalendarForREST(c)).append("\"");
+					hasContent = true;
 				}
-				String epicKey = epic.getSelectedItem().toString();
-				epicKey = epicKey.substring(0, epicKey.indexOf(" - "));
-				buf.append("\"Epic Link\" = \"").append(epicKey).append("\"");
-				hasContent = true;
-			}
-			if (!StringUtils.isEmpty(ordernumber.getText())) {
-				if (hasContent) {
-					buf.append(" and ");
+				if (user.getSelectedIndex() > 0) {
+					if (hasContent) {
+						buf.append(" and ");
+					}
+					if(currentSearchMode.equals(searchMode.Task)){
+						buf.append("(assignee = \"").append(user.getSelectedItem()).append("\" or creator = \"").append(user.getSelectedItem()).append("\" or responsible = \"").append(user.getSelectedItem()).append("\")");
+					}else if(currentSearchMode.equals(searchMode.Worklog)){
+						buf.append("worklogauthor = \"").append(user.getSelectedItem()).append("\"");
+					}
+					hasContent = true;
 				}
-				buf.append("cf[10030] ~ ").append(ordernumber.getText()).append("");
-				hasContent = true;
-			}
-			if (!StringUtils.isEmpty(position.getText())) {
-				if (hasContent) {
-					buf.append(" and ");
+				if (epic.getSelectedIndex() > 0) {
+					if (hasContent) {
+						buf.append(" and ");
+					}
+					String epicKey = epic.getSelectedItem().toString();
+					epicKey = epicKey.substring(0, epicKey.indexOf(" - "));
+					buf.append("\"Epic Link\" = \"").append(epicKey).append("\"");
+					hasContent = true;
 				}
-				buf.append("cf[10031] ~ ").append(position.getText()).append("");
-				hasContent = true;
-			}
-			if(currentSearchMode.equals(searchMode.Worklog)){
-				// mandatory content for worklogs
-				if (hasContent) {
-					buf.append(" and ");
+				if (!StringUtils.isEmpty(ordernumber.getText())) {
+					if (hasContent) {
+						buf.append(" and ");
+					}
+					buf.append("cf[10030] ~ ").append(ordernumber.getText()).append("");
+					hasContent = true;
 				}
-				buf.append("timespent > 0");
-				hasContent = true;
+				if (!StringUtils.isEmpty(position.getText())) {
+					if (hasContent) {
+						buf.append(" and ");
+					}
+					buf.append("cf[10031] ~ ").append(position.getText()).append("");
+					hasContent = true;
+				}
+				if(currentSearchMode.equals(searchMode.Worklog)){
+					// mandatory content for worklogs
+					if (hasContent) {
+						buf.append(" and ");
+					}
+					buf.append("timespent > 0");
+					hasContent = true;
+				}
 			}
 			searchStringDisplay.setText(buf.toString());
 			startSearch();
@@ -1299,6 +1396,108 @@ public class MainFrame {
 				return "Epic";
 			case 13:
 				return "Mutterticket";
+			}
+			return "";
+		}
+	}
+	@SuppressWarnings("serial")
+	private class AureaTableModel extends AbstractTableModel {
+		
+		@Override
+		public int getColumnCount() {
+			return 14;
+		}
+
+		@Override
+		public int getRowCount() {
+			return aureaList.size();
+		}
+		
+		@Override
+		public Class<?> getColumnClass(int columnIndex) {
+			if(getRowCount()==0) {
+				return Object.class;
+			}
+			return getValueAt(0, columnIndex).getClass();
+		}
+
+		@Override
+		public Object getValueAt(int rowIndex, int columnIndex) {
+			SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
+			SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
+			switch(columnIndex) {
+			case 0:
+				return aureaList.get(rowIndex).getCustomer();
+			case 1:
+				return aureaList.get(rowIndex).getCustomerID();
+			case 2:
+				return aureaList.get(rowIndex).getUser();
+			case 3:
+				return aureaList.get(rowIndex).getUserID();
+			case 4:
+				return aureaList.get(rowIndex).getOrdernumber();
+			case 5:
+				return aureaList.get(rowIndex).getOrderposition();
+			case 6:
+				if(aureaList.get(rowIndex).getDate()!=null) {
+					return dateFormat.format(aureaList.get(rowIndex).getDate());
+				}
+				return"";
+			case 7:
+				aureaList.get(rowIndex).getPaymentType();
+			case 8:
+				aureaList.get(rowIndex).getPaymentMethod();
+			case 9:
+				if(aureaList.get(rowIndex).getStartTime()!=null) {
+					return timeFormat.format(aureaList.get(rowIndex).getStartTime());
+				}
+				return "";
+			case 10:
+				if(aureaList.get(rowIndex).getEndTime()!=null) {
+					return timeFormat.format(aureaList.get(rowIndex).getEndTime());
+				}
+				return "";
+			case 11:
+				aureaList.get(rowIndex).getIssueKey();
+			case 12:
+				aureaList.get(rowIndex).getDisplayText();
+			case 13:
+				aureaList.get(rowIndex).getTeam();
+			}
+			return "";
+		}
+
+		@Override
+		public String getColumnName(int column) {
+			switch(column){
+			case 0:
+				return "Kunde";
+			case 1:
+				return "Kunden-ID";
+			case 2:
+				return "Bearbeiter";
+			case 3:
+				return "Bearbeiter-ID";
+			case 4:
+				return "Auftragsnummer";
+			case 5:
+				return "Auftragsposition";
+			case 6:
+				return "Datum";
+			case 7:
+				return "Verrechnungstyp";
+			case 8:
+				return "Verrechnungsmethode";
+			case 9:
+				return "Start";
+			case 10:
+				return "Ende";
+			case 11:
+				return "Jira-TicketNr";
+			case 12:
+				return "Text";
+			case 13:
+				return "Teamzugehörigkeit";
 			}
 			return "";
 		}
