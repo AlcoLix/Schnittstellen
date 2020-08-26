@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -21,7 +22,95 @@ public class JiraParser {
 	public static ArrayList<AureaWorklog> parseAureaSearchResults(StringBuffer json){
 		ArrayList<AureaWorklog> retval = new ArrayList<AureaWorklog>();
 		JSONObject content = new JSONObject(json.toString());
-		//TODO fill with data
+		JSONArray values = content.getJSONArray("values");
+		int[] worklogIDs = new int[values.length()];
+		for (int i = 0; i < values.length(); i++) {
+			worklogIDs[i] = values.getJSONObject(i).getInt("worklogId");
+		}
+		json = queryWorklogListFromWorklogIDs(worklogIDs);
+		JSONArray worklogs = new JSONArray(json.toString());
+		for (int i = 0; i < worklogs.length(); i++) {
+			AureaWorklog aurea = new AureaWorklog();
+			//The normal fields
+			aurea.setWorklogID(worklogs.getJSONObject(i).getString("id"));
+			aurea.setComment(worklogs.getJSONObject(i).getString("comment"));
+			aurea.setTimeSpent(worklogs.getJSONObject(i).getString("timeSpent"));
+			aurea.setTimeSpentSeconds(worklogs.getJSONObject(i).getLong("timeSpentSeconds"));
+			aurea.setUser(worklogs.getJSONObject(i).getJSONObject("author").getString("displayName"));
+			
+			//Date and Time Fields
+			Calendar c = Calendar.getInstance();
+			c.clear();
+			String date = worklogs.getJSONObject(i).getString("created");
+			c.set(Calendar.YEAR, Integer.parseInt(date.substring(0, 4)));
+			//-1 because in the json, the first month is 1, in Calendar it is 0
+			c.set(Calendar.MONTH, Integer.parseInt(date.substring(5, 7))-1);
+			c.set(Calendar.DAY_OF_MONTH, Integer.parseInt(date.substring(8, 10)));
+			c.set(Calendar.HOUR_OF_DAY, Integer.parseInt(date.substring(11, 13)));
+			c.set(Calendar.MINUTE, Integer.parseInt(date.substring(14, 16)));
+			c.set(Calendar.SECOND, Integer.parseInt(date.substring(17, 19)));
+			aurea.setCreate(c.getTime());
+			
+			c.clear();
+			date = worklogs.getJSONObject(i).getString("updated");
+			c.set(Calendar.YEAR, Integer.parseInt(date.substring(0, 4)));
+			//-1 because in the json, the first month is 1, in Calendar it is 0
+			c.set(Calendar.MONTH, Integer.parseInt(date.substring(5, 7))-1);
+			c.set(Calendar.DAY_OF_MONTH, Integer.parseInt(date.substring(8, 10)));
+			c.set(Calendar.HOUR_OF_DAY, Integer.parseInt(date.substring(11, 13)));
+			c.set(Calendar.MINUTE, Integer.parseInt(date.substring(14, 16)));
+			c.set(Calendar.SECOND, Integer.parseInt(date.substring(17, 19)));
+			aurea.setUpdate(c.getTime());
+			
+			c.clear();
+			date = worklogs.getJSONObject(i).getString("Started");
+			c.set(Calendar.YEAR, Integer.parseInt(date.substring(0, 4)));
+			//-1 because in the json, the first month is 1, in Calendar it is 0
+			c.set(Calendar.MONTH, Integer.parseInt(date.substring(5, 7))-1);
+			c.set(Calendar.DAY_OF_MONTH, Integer.parseInt(date.substring(8, 10)));
+			c.set(Calendar.HOUR_OF_DAY, Integer.parseInt(date.substring(11, 13)));
+			c.set(Calendar.MINUTE, Integer.parseInt(date.substring(14, 16)));
+			c.set(Calendar.SECOND, Integer.parseInt(date.substring(17, 19)));
+			aurea.setStartTime(c.getTime());
+
+			c.clear();
+			date = worklogs.getJSONObject(i).getString("Started");
+			c.set(Calendar.YEAR, Integer.parseInt(date.substring(0, 4)));
+			//-1 because in the json, the first month is 1, in Calendar it is 0
+			c.set(Calendar.MONTH, Integer.parseInt(date.substring(5, 7))-1);
+			c.set(Calendar.DAY_OF_MONTH, Integer.parseInt(date.substring(8, 10)));
+			c.set(Calendar.HOUR_OF_DAY, Integer.parseInt(date.substring(11, 13)));
+			c.set(Calendar.MINUTE, Integer.parseInt(date.substring(14, 16)));
+			c.set(Calendar.SECOND, Integer.parseInt(date.substring(17, 19)));
+			aurea.setDate(c.getTime());
+			
+			c.add(Calendar.SECOND, (int)aurea.getTimeSpentSeconds());
+			aurea.setEndTime(c.getTime());
+			
+			//worklog dependent fields
+			Task t = JiraApiHelper.getInstance().queryIssue2ID(worklogs.getJSONObject(i).getString("issueId"));
+			aurea.setBillable(t.isBillable());
+			aurea.setCustomer(t.getCustomer());
+			aurea.setEpic(t.getEpic());
+			aurea.setIssueKey(t.getIssueKey());
+			aurea.setOrdernumber(t.getOrdernumber());
+			aurea.setOrderposition(t.getOrderposition());
+			aurea.setProject(t.getProject());
+			aurea.setSummary(t.getSummary());
+			
+			//Calculated fields
+			aurea.setCustomerID(AureaMapping.getCustomerNumber(aurea.getCustomer()));
+			aurea.setUserID(AureaMapping.getEmployeeNumber(aurea.getUser()));
+			//TODO Tickettyp berücksichtigen
+			aurea.setPaymentMethod(aurea.isBillable()?"J":"N");
+			//A, wenn eine Auftragsnummer eingetragen ist, K, wenn keine Auftragsnummer aber abrechenbar, sonst S
+			aurea.setPaymentType(StringUtils.isEmpty(aurea.getOrdernumber())?"A":aurea.isBillable()?"K":"S");
+			String team = "ERP";
+			if(StringUtils.containsAny(aurea.getUserID(),"139584","139659","149112","158883")) {
+				team = "CRM";
+			}
+			aurea.setTeam(team);
+		}
 		return retval;
 	}
 	
@@ -74,6 +163,15 @@ public class JiraParser {
 			}
 		}
 		return retval;
+	}
+	private static StringBuffer queryWorklogListFromWorklogIDs(int[] worklogIDs) {
+		JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/worklog/list");
+		Hashtable<String, String> header = new Hashtable<String, String>();
+		// Der Auth-Header mit API-Token in base64 encoding
+		header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
+		String body = "{\"ids\":"+Arrays.toString(worklogIDs)+"}";
+		StringBuffer json = JiraApiHelper.getInstance().sendRequest("POST", header, body);
+		return json;
 	}
 	public static Task queryAndParseTasksFromSubtask(String subtaskSelflink, String epic) {
 		JiraApiHelper.getInstance().setBaseString(subtaskSelflink);
@@ -306,6 +404,7 @@ public class JiraParser {
 		t.setTimeSpentSeconds(timespentseconds);
 		t.setTimeEstimateRemaining(remainingEstimate);
 		t.setTimeEstmateRemainingSeconds(remainingEstimateSeconds);
+		t.setCustomer(customer);
 		return t;
 	}
 	private static String getWordtimeForLong(long timeInSeconds) {
@@ -527,10 +626,10 @@ public class JiraParser {
 	}
 	public static String nextPage(StringBuffer json) {
 		JSONObject content = new JSONObject(json.toString());
-		String next = content.getString("nextPage");
 		if(content.getBoolean("lastPage")) {
 			return null;
 		}
+		String next = content.getString("nextPage");
 		return next;
 	}
 	public static StringBuffer parseWorklogsToCsvString(ArrayList<Worklog> worklogs) {

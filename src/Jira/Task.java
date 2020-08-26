@@ -22,6 +22,7 @@ public class Task {
 	private String parent;
 	private String epic;
 	private String project;
+	private String customer;
 	
 	public Date getDueDate() {
 		return dueDate;
@@ -130,5 +131,11 @@ public class Task {
 	}
 	public void setBillable(boolean billable) {
 		this.billable = billable;
+	}
+	public String getCustomer() {
+		return customer;
+	}
+	public void setCustomer(String customer) {
+		this.customer = customer;
 	}
 }

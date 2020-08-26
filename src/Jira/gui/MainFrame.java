@@ -394,12 +394,13 @@ public class MainFrame {
 			public void run() {
 				String title = frame.getTitle();
 				frame.setTitle(title+" ...Suche läuft...");
-				JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
 				if(currentSearchMode.equals(searchMode.Aurea)){
+					JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/worklog/updated");
 					JiraApiHelper.getInstance().appendKeyValue(searchStringDisplay.getText().split("=")[0], searchStringDisplay.getText().split("=")[1]);
 					JiraApiHelper.getInstance().appendKeyValue("validateQuery", "warn");
 					JiraApiHelper.getInstance().appendKeyValue("maxResults", "500");
 				} else  {
+					JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
 					JiraApiHelper.getInstance().appendKeyValue("jql", searchStringDisplay.getText());
 				}
 				if(currentSearchMode.equals(searchMode.Task)) {
@@ -412,7 +413,7 @@ public class MainFrame {
 				header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
 				StringBuffer json;
 				if(currentSearchMode.equals(searchMode.Aurea)){
-					json = JiraApiHelper.getInstance().sendRequest("POST", header);
+					json = JiraApiHelper.getInstance().sendRequest("GET", header);
 				} else {
 					json = JiraApiHelper.getInstance().sendRequest("GET", header);
 				}
@@ -427,7 +428,7 @@ public class MainFrame {
 					String nextPage;
 					while((nextPage = JiraParser.nextPage(json)) != null) {
 						JiraApiHelper.getInstance().setBaseString(nextPage);
-						json = JiraApiHelper.getInstance().sendRequest("POST", header);
+						json = JiraApiHelper.getInstance().sendRequest("GET", header);
 						aureaList.addAll(JiraParser.parseAureaSearchResults(json));
 					}
 				} else {
@@ -1026,7 +1027,7 @@ public class MainFrame {
 				}
 			});
 			c.gridx = 1;
-			c.gridwidth = 2;
+			c.gridwidth = 3;
 			add(project, c);
 			c.gridy++;
 			c.gridx = 0;
@@ -1035,7 +1036,7 @@ public class MainFrame {
 			fromDate = new JDatePicker();
 			fromDate.addKeyListener(listener);
 			c.gridx = 1;
-			c.gridwidth = 2;
+			c.gridwidth = 3;
 			add(fromDate, c);
 			c.gridy++;
 			c.gridx = 0;
@@ -1044,7 +1045,7 @@ public class MainFrame {
 			toDate = new JDatePicker();
 			toDate.addKeyListener(listener);
 			c.gridx = 1;
-			c.gridwidth = 2;
+			c.gridwidth = 3;
 			add(toDate, c);
 			c.gridy++;
 			c.gridx = 0;
@@ -1057,7 +1058,7 @@ public class MainFrame {
 			}
 			user.addKeyListener(listener);
 			c.gridx = 1;
-			c.gridwidth = 2;
+			c.gridwidth = 3;
 			add(user, c);
 			c.gridy++;
 			c.gridx = 0;
@@ -1070,14 +1071,14 @@ public class MainFrame {
 			}
 			epic.addKeyListener(listener);
 			c.gridx = 1;
-			c.gridwidth = 2;
+			c.gridwidth = 3;
 			add(epic, c);
 			c.gridy++;
 			c.gridx = 0;
 			c.gridwidth = 1;
 			add(new JLabel("Auftragsnummer"), c);
 			c.gridx = 1;
-			c.gridwidth = 2;
+			c.gridwidth = 3;
 			ordernumber = new JTextField();
 			ordernumber.addKeyListener(listener);
 			add(ordernumber, c);
@@ -1086,7 +1087,7 @@ public class MainFrame {
 			c.gridwidth = 1;
 			add(new JLabel("Position"), c);
 			c.gridx = 1;
-			c.gridwidth = 2;
+			c.gridwidth = 3;
 			position = new JTextField();
 			position.addKeyListener(listener);
 			add(position, c);
@@ -1423,7 +1424,7 @@ public class MainFrame {
 
 		@Override
 		public Object getValueAt(int rowIndex, int columnIndex) {
-			SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
+			SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
 			SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
 			switch(columnIndex) {
 			case 0:

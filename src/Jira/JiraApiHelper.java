@@ -1,6 +1,7 @@
 package Jira;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -10,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Hashtable;
+
+import org.json.JSONObject;
 
 import Jira.gui.MainFrame;
 import Jira.utils.CalendarUtils;
@@ -23,6 +26,8 @@ public class JiraApiHelper extends ApiHelper {
 	public static final String FIELDS_FOR_TASKS = "key,customfield_10030,customfield_10031,customfield_10033,subtasks,summary,project,customfield_10014,creator,assignee,dueddate,customfield_10039,customfield_10034,timeoriginalestimate,timeestimate,timespent,customfield_10029,customfield_10035";
 	public static final String FIELDS_FOR_SUBTASKS = "key,customfield_10030,customfield_10031,customfield_10033,summary,project,parent,creator,assignee,duedate,customfield_10039,customfield_10034,timeoriginalestimate,timeestimate,timespent,customfield_10029,customfield_10035";
 	public static final String FIELDS_FOR_EPICS = "key,customfield_10011,customfield_10030,customfield_10031,project";
+	
+	private static Hashtable<String, Task>taskCache = new Hashtable<String, Task>();
 		
 	/**
 	 * sendet den Request mit den eingewstellten Parametern. der urlString muss gesetzt sein!
@@ -31,6 +36,16 @@ public class JiraApiHelper extends ApiHelper {
 	 * @return einen String Buffer mit dem JSON
 	 */
 	public StringBuffer sendRequest(String type, Hashtable<String, String>header) {
+		return sendRequest(type, header, null);
+	}
+	/**
+	 * sendet den Request mit den eingestellten Parametern. der urlString muss gesetzt sein!
+	 * @param type GET oder POST
+	 * @param header key-value Paare für die Header-PArameter (z.B. Authentifizierung)
+	 * @param body der body für POST anfragen
+	 * @return einen String Buffer mit dem JSON
+	 */
+	public StringBuffer sendRequest(String type, Hashtable<String, String>header, String body) {
 		StringBuffer output = new StringBuffer();
 //		System.out.println(ApiHelper.getInstance().getUrlString().toString());
 		//try-catch Konstrukt; dritte Erweiterung wäre finally; finally ist wie ein Aufräumer, was hier steht, wird auf jeden Fall gemacht
@@ -44,6 +59,14 @@ public class JiraApiHelper extends ApiHelper {
 					for (String key : header.keySet()) {
 						conn.setRequestProperty(key, header.get(key));	
 					}
+				}
+				if (body != null) {
+					conn.setDoOutput(true);
+		            //conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+		            conn.setRequestProperty("Content-Type", "application/json");
+		            conn.setRequestProperty("User-Agent", "Java client");
+					conn.setRequestProperty("Content-Length", Integer.toString(body.length()));
+					new DataOutputStream(conn.getOutputStream()).write(body.getBytes("UTF8"));
 				}
 				if (conn.getResponseCode() != 200) {
 					throw new RuntimeException("Failed : HTTP Error code : " + conn.getResponseCode());
@@ -111,7 +134,23 @@ public class JiraApiHelper extends ApiHelper {
 		json = JiraApiHelper.getInstance().sendRequest("GET", header);
 		return json;
 	}
-	
+	public Task queryIssue2ID(String id) {
+		if(taskCache.containsKey(id)) {
+			return taskCache.get(id);
+		}
+		setBaseString("https://partsolution.atlassian.net/rest/api/latest/search");
+		appendKeyValue("validateQuery", "warn");
+		appendKeyValue("fields", FIELDS_FOR_TASKS);
+		appendKeyValue("jql", "id = "+id);
+		Hashtable<String, String> header = new Hashtable<String, String>();
+		// Der Auth-Header mit API-Token in base64 encoding
+		header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
+		StringBuffer json;
+		json = JiraApiHelper.getInstance().sendRequest("GET", header);
+		Task task = JiraParser.parseTaskFromIssueObject(new JSONObject(json.toString()));
+		taskCache.put(id, task);
+		return task;
+	}
 	public String[] queryUsers() {
 		setBaseString("https://partsolution.atlassian.net/rest/api/latest/group/member");
 		appendKeyValue("groupname", "jira-software-users");

@@ -5,6 +5,7 @@ import java.util.Date;
 import Jira.utils.StringUtils;
 
 public class AureaWorklog {
+	private String worklogID;
 	private String user;
 	private String userID;
 	private String customer;
@@ -26,6 +27,27 @@ public class AureaWorklog {
 	private boolean billable;
 	private String parent;
 	private String epic;
+	private Date create;
+	private Date update;
+	
+	public Date getCreate() {
+		return create;
+	}
+	public void setCreate(Date create) {
+		this.create = create;
+	}
+	public Date getUpdate() {
+		return update;
+	}
+	public void setUpdate(Date update) {
+		this.update = update;
+	}
+	public String getWorklogID() {
+		return worklogID;
+	}
+	public void setWorklogID(String worklogID) {
+		this.worklogID = worklogID;
+	}
 	
 	public String getPaymentType() {
 		return paymentType;
