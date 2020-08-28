@@ -15,14 +15,9 @@ public class AureaMapping {
 			init();
 		}
 		for (Customer customer : customers) {
-			if(customer.getFirma().toLowerCase().contains(searchString.toLowerCase())) {
-				return customer.getExtSchlüssel();
-			}
-		}
-		for (Customer customer : customers) {
-			String[] parts = customer.getFirma().split(" ");
-			for (int i = 0; i < parts.length; i++) {
-				if(parts[i].length()>4 && searchString.toLowerCase().contains(parts[i].toLowerCase())){
+			String[] split = customer.getJira().split(",");
+			for (int i = 0; i < split.length; i++) {
+				if(split[i].equalsIgnoreCase(searchString)) {
 					return customer.getExtSchlüssel();
 				}
 			}
@@ -31,17 +26,15 @@ public class AureaMapping {
 	}
 	/**
 	 * 
-	 * @param searchString the Name of the employee, seperated by some non alphanumerical
+	 * @param searchString the JiraID of the employee
 	 * @return the ID
 	 */
 	public static String getEmployeeNumber(String searchString) {
 		if(employees==null) {
 			init();
 		}
-		String[] name = searchString.split("\\W");
 		for (Employee employee : employees) {
-			if((employee.getNachname().equalsIgnoreCase(name[0])&&employee.getVorname().equalsIgnoreCase(name[1]))
-					||(employee.getNachname().equalsIgnoreCase(name[1])&&employee.getVorname().equalsIgnoreCase(name[0]))) {
+			if(employee.getJira().equalsIgnoreCase(searchString)) {
 				return employee.getKPSerNo();
 			}
 		}
@@ -74,11 +67,13 @@ public class AureaMapping {
 		private String Vorname;
 		private String Nachname;
 		private String KPSerNo;
+		private String Jira;
 		private Employee(String csvLine) {
 			String[] values = csvLine.split(";");
 			setVorname(values[0]);
 			setNachname(values[1]);
 			setKPSerNo(values[2]);
+			setJira(values[3]);
 		}
 		public String getVorname() {
 			return Vorname;
@@ -98,6 +93,12 @@ public class AureaMapping {
 		public void setKPSerNo(String kPSerNo) {
 			KPSerNo = kPSerNo;
 		}
+		public String getJira() {
+			return Jira;
+		}
+		public void setJira(String jira) {
+			Jira = jira;
+		}
 	}
 	private static class Customer{
 		private String Firma;
@@ -106,6 +107,7 @@ public class AureaMapping {
 		private String FirmenNr;
 		private String ExtSystem;
 		private String ExtSchlüssel;
+		private String Jira;
 		private Customer(String csvLine) {
 			String[] values = csvLine.split(";");
 			setFirma(values[0]);
@@ -114,6 +116,11 @@ public class AureaMapping {
 			setFirmenNr(values[3]);
 			setExtSystem(values[4]);
 			setExtSchlüssel(values[5]);
+			if(values.length>6) {
+				setJira(values[6]);
+			} else {
+				setJira("");
+			}
 		}
 		public String getFirma() {
 			return Firma;
@@ -150,6 +157,12 @@ public class AureaMapping {
 		}
 		public void setExtSchlüssel(String extSchlüssel) {
 			ExtSchlüssel = extSchlüssel;
+		}
+		public String getJira() {
+			return Jira;
+		}
+		public void setJira(String jira) {
+			Jira = jira;
 		}
 	}
 }

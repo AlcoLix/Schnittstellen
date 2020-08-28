@@ -41,7 +41,7 @@ public class JiraParser {
 			aurea.setTimeSpent(worklogs.getJSONObject(i).getString("timeSpent"));
 			aurea.setTimeSpentSeconds(worklogs.getJSONObject(i).getLong("timeSpentSeconds"));
 			aurea.setUser(worklogs.getJSONObject(i).getJSONObject("author").getString("displayName"));
-			
+			aurea.setUserID(worklogs.getJSONObject(i).getJSONObject("author").getString("accountId"));
 			//Date and Time Fields
 			Calendar c = Calendar.getInstance();
 			c.clear();
@@ -104,7 +104,7 @@ public class JiraParser {
 			
 			//Calculated fields
 			aurea.setCustomerID(AureaMapping.getCustomerNumber(aurea.getCustomer()));
-			aurea.setUserID(AureaMapping.getEmployeeNumber(aurea.getUser()));
+			aurea.setUserID(AureaMapping.getEmployeeNumber(aurea.getUserID()));
 			//TODO Tickettyp berücksichtigen
 			aurea.setPaymentMethod(aurea.isBillable()?"J":"N");
 			//A, wenn eine Auftragsnummer eingetragen ist, K, wenn keine Auftragsnummer aber abrechenbar, sonst S
@@ -734,6 +734,82 @@ public class JiraParser {
 		}
 		return csvString;
 	}
+	public static StringBuffer parseAureaToCsvString(ArrayList<AureaWorklog> aurea) {
+		StringBuffer csvString = new StringBuffer();
+		csvString.append("Kommentar").append(";");
+		csvString.append("Zusammenfassung").append(";");
+		csvString.append("Anzeigetext").append(";");
+		csvString.append("Kunde").append(";");
+		csvString.append("KundenID").append(";");
+		csvString.append("Epic").append(";");
+		csvString.append("IssueKey").append(";");
+		csvString.append("Auftragsnummer").append(";");
+		csvString.append("Auftragsposition").append(";");
+		csvString.append("Mutterticket").append(";");
+		csvString.append("Verrechnungsmethode").append(";");
+		csvString.append("Verrechnugstyp").append(";");
+		csvString.append("Projekt").append(";");
+		csvString.append("Team").append(";");
+		csvString.append("gebuchte Zeit").append(";");
+		csvString.append("gebuchte Zeit in Sekunden").append(";");
+		csvString.append("Mitarbeiter").append(";");
+		csvString.append("MitarbeiterID").append(";");
+		csvString.append("WorklogID").append(";");
+		csvString.append("Updated").append(";");
+		csvString.append("Erstellt").append(";");
+		csvString.append("Datum").append(";");
+		csvString.append("Endzeit").append(";");
+		csvString.append("Startzeit").append("\r\n");
+		for (AureaWorklog tb : aurea) {
+			SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+			SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
+			csvString.append("\"").append(tb.getComment().replace('\r', ' ').replace('\n', ' ')).append("\"").append(";");
+			csvString.append("\"").append(tb.getSummary().replace('\r', ' ').replace('\n', ' ')).append("\"").append(";");
+			csvString.append("\"").append(tb.getDisplayText().replace('\r', ' ').replace('\n', ' ')).append("\"").append(";");
+			csvString.append(tb.getCustomer()).append(";");
+			csvString.append(tb.getCustomerID()).append(";");
+			csvString.append(tb.getEpic()).append(";");
+			csvString.append(tb.getIssueKey()).append(";");
+			csvString.append(tb.getOrdernumber()).append(";");
+			csvString.append(tb.getOrderposition()).append(";");
+			csvString.append(tb.getParent()).append(";");
+			csvString.append(tb.getPaymentMethod()).append(";");
+			csvString.append(tb.getPaymentType()).append(";");
+			csvString.append(tb.getProject()).append(";");
+			csvString.append(tb.getTeam()).append(";");
+			csvString.append(tb.getTimeSpent()).append(";");
+			csvString.append(tb.getTimeSpentSeconds()).append(";");
+			csvString.append(tb.getUser()).append(";");
+			csvString.append(tb.getUserID()).append(";");
+			csvString.append(tb.getWorklogID()).append(";");
+			if(tb.getUpdate()!=null) {
+				csvString.append(dateFormat.format(tb.getUpdate())).append(";");
+			}else {
+				csvString.append(";");
+			}
+			if(tb.getCreate()!=null) {
+				csvString.append(dateFormat.format(tb.getCreate())).append(";");
+			}else {
+				csvString.append(";");
+			}
+			if(tb.getDate()!=null) {
+				csvString.append(dateFormat.format(tb.getDate())).append(";");
+			}else {
+				csvString.append(";");
+			}
+			if(tb.getEndTime()!=null) {
+				csvString.append(timeFormat.format(tb.getEndTime())).append(";");
+			}else {
+				csvString.append(";");
+			}
+			if(tb.getStartTime()!=null) {
+				csvString.append(timeFormat.format(tb.getStartTime())).append(";");
+			}else {
+				csvString.append(";");
+			}
+		}
+		return csvString;
+	}
 	
 	public static void writeWorklogsToFile(ArrayList<Worklog> worklogs, File f) {
 		try {
@@ -748,9 +824,22 @@ public class JiraParser {
 			e.printStackTrace();
 		}
 	}
-	public static void writeTasksToFile(ArrayList<Task> Tasks, File f) {
+	public static void writeTasksToFile(ArrayList<Task> tasks, File f) {
 		try {
-			StringBuffer buf = JiraParser.parseTasksToCsvString(Tasks);
+			StringBuffer buf = JiraParser.parseTasksToCsvString(tasks);
+			FileWriter writer = new FileWriter(f, false);
+			writer.write(buf.toString());
+			writer.close();
+			writer = new FileWriter(f, false);
+			writer.write(buf.toString());
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	public static void writeAureaToFile(ArrayList<AureaWorklog> aurea, File f) {
+		try {
+			StringBuffer buf = JiraParser.parseAureaToCsvString(aurea);
 			FileWriter writer = new FileWriter(f, false);
 			writer.write(buf.toString());
 			writer.close();

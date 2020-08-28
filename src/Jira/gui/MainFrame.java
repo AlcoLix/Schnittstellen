@@ -578,6 +578,24 @@ public class MainFrame {
 					}
 				}
 			}
+		} else if(currentSearchMode.equals(searchMode.Aurea)) {
+			if (aureaList.size() > 0) {
+				String s = JOptionPane.showInputDialog(frame, "Dateiname angeben (ohne Endung)", "Exportdatei speichern",
+						JOptionPane.QUESTION_MESSAGE);
+				if (!StringUtils.isEmpty(s)) {
+					File f = new File("latest.csv");
+					JiraParser.writeAureaToFile(aureaList, f);
+					f = new File(s.split("\\.")[0] + ".csv");
+					JiraParser.writeAureaToFile(aureaList, f);
+					try {
+						JOptionPane.showInternalMessageDialog(frame.getContentPane(),
+								"Datei " + f.getCanonicalPath() + " wurde gespeichert", "Datenexport",
+								JOptionPane.INFORMATION_MESSAGE);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
 		}
 	}
 
