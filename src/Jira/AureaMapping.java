@@ -27,7 +27,7 @@ public class AureaMapping {
 	/**
 	 * 
 	 * @param searchString the JiraID of the employee
-	 * @return the ID
+	 * @return the Aurea ID
 	 */
 	public static String getEmployeeNumber(String searchString) {
 		if(employees==null) {
