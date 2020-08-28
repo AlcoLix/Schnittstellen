@@ -23,6 +23,7 @@ public class Task {
 	private String epic;
 	private String project;
 	private String customer;
+	private String issueType;
 	
 	public Date getDueDate() {
 		return dueDate;
@@ -137,5 +138,11 @@ public class Task {
 	}
 	public void setCustomer(String customer) {
 		this.customer = customer;
+	}
+	public String getIssueType() {
+		return issueType;
+	}
+	public void setIssueType(String issueType) {
+		this.issueType = issueType;
 	}
 }

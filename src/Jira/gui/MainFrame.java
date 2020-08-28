@@ -350,22 +350,24 @@ public class MainFrame {
 			}
 		};
 		aureaTable.getColumnModel().getColumn(0).setPreferredWidth(100);
-		aureaTable.getColumnModel().getColumn(1).setPreferredWidth(125);
-		aureaTable.getColumnModel().getColumn(2).setPreferredWidth(50);
+		aureaTable.getColumnModel().getColumn(1).setPreferredWidth(75);
+		aureaTable.getColumnModel().getColumn(2).setPreferredWidth(100);
 		aureaTable.getColumnModel().getColumn(3).setPreferredWidth(75);
 		aureaTable.getColumnModel().getColumn(4).setPreferredWidth(75);
 		aureaTable.getColumnModel().getColumn(5).setPreferredWidth(50);
-		aureaTable.getColumnModel().getColumn(6).setPreferredWidth(50);
+		aureaTable.getColumnModel().getColumn(6).setPreferredWidth(75);
 		aureaTable.getColumnModel().getColumn(7).setPreferredWidth(30);
-		aureaTable.getColumnModel().getColumn(8).setPreferredWidth(200);
-		aureaTable.getColumnModel().getColumn(9).setPreferredWidth(200);
-		aureaTable.getColumnModel().getColumn(10).setPreferredWidth(75);
+		aureaTable.getColumnModel().getColumn(8).setPreferredWidth(30);
+		aureaTable.getColumnModel().getColumn(9).setPreferredWidth(50);
+		aureaTable.getColumnModel().getColumn(10).setPreferredWidth(50);
 		aureaTable.getColumnModel().getColumn(11).setPreferredWidth(75);
-		aureaTable.getColumnModel().getColumn(12).setPreferredWidth(75);
+		aureaTable.getColumnModel().getColumn(12).setPreferredWidth(200);
+		aureaTable.getColumnModel().getColumn(13).setPreferredWidth(50);
+		aureaTable.getColumnModel().getColumn(14).setPreferredWidth(100);
 		aureaTable.setAutoCreateRowSorter(true);
 		JScrollPane scrollPane = new JScrollPane(aureaTable);
-		scrollPane.setPreferredSize(new Dimension(1180, 600));
-		scrollPane.setMinimumSize(new Dimension(1180, 600));
+		scrollPane.setPreferredSize(new Dimension(1135, 600));
+		scrollPane.setMinimumSize(new Dimension(1135, 600));
 		
 		//Initializing the row sorter
 		TableRowSorter<AureaTableModel> sorter = new TableRowSorter<AureaTableModel>((AureaTableModel)aureaTable.getModel());
@@ -1133,7 +1135,7 @@ public class MainFrame {
 					buf.append(" >= \"").append(CalendarUtils.getStringToCalendarForREST(c)).append("\"");
 				}else if(currentSearchMode.equals(searchMode.Aurea)){
 					buf.append("since");
-					buf.append(" = ").append(String.valueOf(c.getTimeInMillis()));
+					buf.append("=").append(String.valueOf(c.getTimeInMillis()));
 				}
 				hasContent = true;
 			}
@@ -1406,7 +1408,7 @@ public class MainFrame {
 		
 		@Override
 		public int getColumnCount() {
-			return 14;
+			return 15;
 		}
 
 		@Override
@@ -1445,9 +1447,9 @@ public class MainFrame {
 				}
 				return"";
 			case 7:
-				aureaList.get(rowIndex).getPaymentType();
+				return aureaList.get(rowIndex).getPaymentType();
 			case 8:
-				aureaList.get(rowIndex).getPaymentMethod();
+				return aureaList.get(rowIndex).getPaymentMethod();
 			case 9:
 				if(aureaList.get(rowIndex).getStartTime()!=null) {
 					return timeFormat.format(aureaList.get(rowIndex).getStartTime());
@@ -1459,11 +1461,15 @@ public class MainFrame {
 				}
 				return "";
 			case 11:
-				aureaList.get(rowIndex).getIssueKey();
+				return aureaList.get(rowIndex).getIssueKey();
 			case 12:
-				aureaList.get(rowIndex).getDisplayText();
+				return aureaList.get(rowIndex).getDisplayText();
 			case 13:
-				aureaList.get(rowIndex).getTeam();
+				return aureaList.get(rowIndex).getTeam();
+			case 14:
+				if(aureaList.get(rowIndex).getEndTime()!=null) {
+					return dateFormat.format(aureaList.get(rowIndex).getUpdate());
+				}
 			}
 			return "";
 		}
@@ -1499,6 +1505,8 @@ public class MainFrame {
 				return "Text";
 			case 13:
 				return "Teamzugehörigkeit";
+			case 14:
+				return "Updated";
 			}
 			return "";
 		}

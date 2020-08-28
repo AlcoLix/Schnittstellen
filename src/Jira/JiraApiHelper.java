@@ -23,7 +23,7 @@ public class JiraApiHelper extends ApiHelper {
 
 	public static final String FIELDS_FOR_WORKLOGS = "worklog, key,customfield_10030,customfield_10031,customfield_10033,subtasks,summary,project,customfield_10014,components,creator,assignee,customfield_10029";
 	public static final String FIELDS_FOR_WORKLOG_SUBTASKS = "worklog, key,customfield_10030,customfield_10031,customfield_10033,summary,project,parent,components,creator,assignee,customfield_10029";
-	public static final String FIELDS_FOR_TASKS = "key,customfield_10030,customfield_10031,customfield_10033,subtasks,summary,project,customfield_10014,creator,assignee,dueddate,customfield_10039,customfield_10034,timeoriginalestimate,timeestimate,timespent,customfield_10029,customfield_10035";
+	public static final String FIELDS_FOR_TASKS = "key,customfield_10030,customfield_10031,customfield_10033,subtasks,summary,project,customfield_10014,creator,assignee,dueddate,customfield_10039,customfield_10034,timeoriginalestimate,timeestimate,timespent,customfield_10029,customfield_10035,issuetype";
 	public static final String FIELDS_FOR_SUBTASKS = "key,customfield_10030,customfield_10031,customfield_10033,summary,project,parent,creator,assignee,duedate,customfield_10039,customfield_10034,timeoriginalestimate,timeestimate,timespent,customfield_10029,customfield_10035";
 	public static final String FIELDS_FOR_EPICS = "key,customfield_10011,customfield_10030,customfield_10031,project";
 	
@@ -147,7 +147,7 @@ public class JiraApiHelper extends ApiHelper {
 		header.put("Authorization", "Basic RGVubmlzLnJ1ZW56bGVyQHBhcnQuZGU6WTJpZlp6dWpRYVZTZmR3RkFZMUMzQzE5");
 		StringBuffer json;
 		json = JiraApiHelper.getInstance().sendRequest("GET", header);
-		Task task = JiraParser.parseTaskFromIssueObject(new JSONObject(json.toString()));
+		Task task = JiraParser.parseTaskFromIssueObject(new JSONObject(json.toString()).getJSONArray("issues").getJSONObject(0));
 		taskCache.put(id, task);
 		return task;
 	}

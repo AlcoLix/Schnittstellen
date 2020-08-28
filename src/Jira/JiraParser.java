@@ -33,7 +33,11 @@ public class JiraParser {
 			AureaWorklog aurea = new AureaWorklog();
 			//The normal fields
 			aurea.setWorklogID(worklogs.getJSONObject(i).getString("id"));
-			aurea.setComment(worklogs.getJSONObject(i).getString("comment"));
+			String comment = "";
+			if(worklogs.getJSONObject(i).has("comment")) {
+				comment = worklogs.getJSONObject(i).getString("comment");
+			}
+			aurea.setComment(comment);
 			aurea.setTimeSpent(worklogs.getJSONObject(i).getString("timeSpent"));
 			aurea.setTimeSpentSeconds(worklogs.getJSONObject(i).getLong("timeSpentSeconds"));
 			aurea.setUser(worklogs.getJSONObject(i).getJSONObject("author").getString("displayName"));
@@ -63,7 +67,7 @@ public class JiraParser {
 			aurea.setUpdate(c.getTime());
 			
 			c.clear();
-			date = worklogs.getJSONObject(i).getString("Started");
+			date = worklogs.getJSONObject(i).getString("started");
 			c.set(Calendar.YEAR, Integer.parseInt(date.substring(0, 4)));
 			//-1 because in the json, the first month is 1, in Calendar it is 0
 			c.set(Calendar.MONTH, Integer.parseInt(date.substring(5, 7))-1);
@@ -74,7 +78,7 @@ public class JiraParser {
 			aurea.setStartTime(c.getTime());
 
 			c.clear();
-			date = worklogs.getJSONObject(i).getString("Started");
+			date = worklogs.getJSONObject(i).getString("started");
 			c.set(Calendar.YEAR, Integer.parseInt(date.substring(0, 4)));
 			//-1 because in the json, the first month is 1, in Calendar it is 0
 			c.set(Calendar.MONTH, Integer.parseInt(date.substring(5, 7))-1);
@@ -110,6 +114,7 @@ public class JiraParser {
 				team = "CRM";
 			}
 			aurea.setTeam(team);
+			retval.add(aurea);
 		}
 		return retval;
 	}
@@ -385,6 +390,12 @@ public class JiraParser {
 		} catch (JSONException e) {
 			
 		}
+		String type  ="";
+		try {
+			type = fields.getJSONObject("issuetype").getString("name");
+		} catch (JSONException e) {
+			
+		}
 		Task t = new Task();
 		t.setAssignee(assignee);
 		t.setBillable(billing);
@@ -405,6 +416,7 @@ public class JiraParser {
 		t.setTimeEstimateRemaining(remainingEstimate);
 		t.setTimeEstmateRemainingSeconds(remainingEstimateSeconds);
 		t.setCustomer(customer);
+		t.setIssueType(type);
 		return t;
 	}
 	private static String getWordtimeForLong(long timeInSeconds) {

@@ -75,7 +75,7 @@ public class AureaMapping {
 		private String Nachname;
 		private String KPSerNo;
 		private Employee(String csvLine) {
-			String[] values = csvLine.split(",");
+			String[] values = csvLine.split(";");
 			setVorname(values[0]);
 			setNachname(values[1]);
 			setKPSerNo(values[2]);
@@ -107,7 +107,7 @@ public class AureaMapping {
 		private String ExtSystem;
 		private String ExtSchlüssel;
 		private Customer(String csvLine) {
-			String[] values = csvLine.split(",");
+			String[] values = csvLine.split(";");
 			setFirma(values[0]);
 			setKundennummer(values[1]);
 			setStaNo(values[2]);
