@@ -61,6 +61,7 @@ import Jira.JiraApiHelper;
 import Jira.JiraParser;
 import Jira.Task;
 import Jira.Worklog;
+import Jira.database.DatabaseConnection;
 import Jira.scripting.Script;
 import Jira.scripting.ScriptStep;
 import Jira.utils.CalendarUtils;
@@ -92,12 +93,23 @@ public class MainFrame {
 
 	private void initFrame() {
 		frame = new JFrame("Jira Auswertung");
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	//	frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		initValues();
 		initMenuBar();
 		initContent();
 		frame.pack();
 		frame.setVisible(true);
+		frame.addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				shutdown();
+			}
+		});
+	}
+	
+	private void shutdown() {
+		DatabaseConnection.getInstance().close();
+		System.exit(0);
 	}
 
 	/**
