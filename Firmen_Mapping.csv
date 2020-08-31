@@ -660,8 +660,8 @@ NEXTCLINICS INTERNATIONAL GmbH;10672;100;1064853;SBO;10672;
 AVANTGARDE Experts GmbH;10636;100;1064854;SBO;10636;
 APOMEDICA Deutschland GmbH;10641;100;1064878;SBO;10641;
 DVZ DatenverarbeitungszentrumMecklenburg-Vorpommern GmbH;10644;100;1064902;SBO;10644;
-Fachverband landwirtschaftlicher Trocknungen in Bayern e.V.;10649;100;1064946;SBO;10649;
-Futtertrocknung Lamerdingen eG;10654;100;1064999;SBO;10654;
+Fachverband landwirtschaftlicher Trocknungen in Bayern e.V.;10649;100;1064946;SBO;10649;FuttertrockungFachverband
+Futtertrocknung Lamerdingen eG;10654;100;1064999;SBO;10654;FuttertrockungLamerdingen
 EASY SOFTWARE Deutschland GmbH;10652;100;1065009;SBO;10652;
 Grünfuttertrocknungsgenossenschaft Buschhof eG ;10655;100;1065013;SBO;10655;FuttertrockungBuschhof
 RegioGras eG;10656;100;1065014;SBO;10656;FuttertrockungRegioGras
@@ -673,7 +673,7 @@ Futtertrocknung Kempten eG;10661;100;1065019;SBO;10661;FuttertrockungKempten
 Futtertrocknung Kaufbeuren eG;10662;100;1065020;SBO;10662;FuttertrockungKaufbeuren
 Trocknungsgenossenschaft Oberallgäu eG;10663;100;1065021;SBO;10663;FuttertrockungOberallgäu
 Trocknungswerk Donaualtheim eG;10664;100;1065022;SBO;10664;FuttertrockungDonaualtheim
-Trocknungsgenossenschaft Kisslegg eG;10665;100;1065023;SBO;10665;FuttertrockungFisslegg
+Trocknungsgenossenschaft Kisslegg eG;10665;100;1065023;SBO;10665;FuttertrockungKisslegg
 Trocknungswerk Leibi eG;10666;100;1065026;SBO;10666;FuttertrockungLeibi
 Trocknungswerk Achsheim eG;10667;100;1065027;SBO;10667;FuttertrockungAchseim
 iSYS Medizintechnik GmbH;10668;100;1065032;SBO;10668;

@@ -9,6 +9,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Properties;
 
@@ -21,15 +22,61 @@ public class DatabaseConnection {
 		getInstance().connect();
 		getInstance().close();
 	}
+//	MERGE tableA AS t
+//	USING (VALUES 
+//	        ('datakeyA1', 'datakeyA2', 'somevaluetoinsertorupdate'), 
+//	        ('datakeyB1', 'datakeyB2', 'somevaluetoinsertorupdate'),
+//	        ('datakeyC1', 'datakeyC2', 'somevaluetoinsertorupdate')
+//	    ) AS s (Key1, Key2, Val)
+//	        ON s.Key1 = t.Key1
+//	        AND s.Key2 = t.Key2
+//	WHEN MATCHED THEN 
+//	    UPDATE 
+//	    SET    Val = s.Val
+//	WHEN NOT MATCHED THEN 
+//	    INSERT (Key1, Key2, Val)
+//	    VALUES (s.Key1, s.Key2, s.Val);
 	public void sendInsertOrUpdate4Aurea(ArrayList<AureaWorklog> aureaWorklogs) {
+//		StringBuffer sql = new StringBuffer("INSERT INTO 'TRANSFER' (worklogID, \"user\", userID, customer, customerID, ordernumber, orderposition, date, paymentType, paymentMethod, startTime, endTime, issueKey, comment, summary, project, team, timeSpent, timeSpentSeconds, billable, parent, epic, worklogcreate, worklogupdate, displayText) VALUES ");
+		StringBuffer sql = new StringBuffer("MERGE \"Transfer\" AS t USING (VALUES ");
+		SimpleDateFormat format = new SimpleDateFormat(".yyyyMMdd HH:mm:ss");
 		for (AureaWorklog worklog : aureaWorklogs) {
+			sql.append("(").append(worklog.getWorklogID());
+			sql.append(",").append(worklog.getUser());
+			sql.append(",").append(worklog.getUserID());
+			sql.append(",").append(worklog.getCustomer());
+			sql.append(",").append(worklog.getCustomerID());
+			sql.append(",").append(worklog.getOrdernumber());
+			sql.append(",").append(worklog.getOrderposition());
+			sql.append(",").append(format.format(worklog.getDate()));
+			sql.append(",").append(worklog.getPaymentType());
+			sql.append(",").append(worklog.getPaymentMethod());
+			sql.append(",").append(format.format(worklog.getStartTime()));
+			sql.append(",").append(format.format(worklog.getEndTime()));
+			sql.append(",").append(worklog.getIssueKey());
+			sql.append(",").append(worklog.getComment());
+			sql.append(",").append(worklog.getSummary());
+			sql.append(",").append(worklog.getProject());
+			sql.append(",").append(worklog.getTeam());
+			sql.append(",").append(worklog.getIssueKey());
+			sql.append(",").append(worklog.getTimeSpent());
+			sql.append(",").append(worklog.getTimeSpentSeconds());
+			sql.append(",").append(worklog.isBillable()?"Y":"N");
+			sql.append(",").append(worklog.getParent());
+			sql.append(",").append(worklog.getEpic());
+			sql.append(",").append(format.format(worklog.getCreate()));
+			sql.append(",").append(format.format(worklog.getUpdate()));;
+			sql.append(",").append(worklog.getDisplayText());
 			
-			//INSERT INTO `ALLOWANCE` (`EmployeeID`, `Year`, `Month`, `OverTime`,`Medical`,
-			//		`Lunch`, `Bonus`, `Allowance`) values (10000001, 2014, 4, 10.00, 10.00,
-			//		10.45, 10.10, 40.55) ON DUPLICATE KEY UPDATE `EmployeeID` = 10000001
 		}
+		sql.append(") AS s (worklogID, \"user\", userID, customer, customerID, ordernumber, orderposition, date, paymentType, paymentMethod, startTime, endTime, issueKey, comment, summary, project, team, timeSpent, timeSpentSeconds, billable, parent, epic, worklogcreate, worklogupdate, displayText)");
+		sql.append(" ON s.worklogID =t.worklogID WHEN MATCHED THEN UPDATE \"user\" = s.\"user\",userID = s.userID,customer = s.customer,customerID = s.customerID,ordernumber = s.ordernumber,orderposition = s.orderposition,date = s.date,paymentType = s.paymentType,paymentMethod = s.paymentMethod,startTime = s.startTime,endTime = s.endTime,issueKey = s.issueKey,comment = s.comment,summary = s.summary,project = s.project,team = s.team,timeSpent = s.timeSpent,timeSpentSeconds = s.timeSpentSeconds,billable = s.billable,parent = s.parent,epic = s.epic,worklogcreate = s.worklogcreate, worklogupdate = s.worklogupdate, displayText =  s.displayText");
+		sql.append(" WHEN NOT MATCHED THEN INSERT (worklogID, \\\"user\\\", userID, customer, customerID, ordernumber, orderposition, date, paymentType, paymentMethod, startTime, endTime, issueKey, comment, summary, project, team, timeSpent, timeSpentSeconds, billable, parent, epic, worklogcreate, worklogupdate, displayText) VALUES \")");
+		sql.append(" (s.worklogID, s.\"user\", s.userID, s.customer, s.customerID, s.ordernumber, s.orderposition, s.date, s.paymentType, s.paymentMethod, s.startTime, s.endTime, s.issueKey, s.comment, s.summary, s.project, s.team, s.timeSpent, s.timeSpentSeconds, s.billable, s.parent, s.epic, s.worklogcreate, s.worklogupdate, s.displayText)");
+		
 		try {
 			Statement st = con.createStatement();
+			st.execute(sql.toString());
 		} catch (SQLException e) {
 			e.printStackTrace(System.err);
 		    System.err.println("SQLState: " +
@@ -102,7 +149,7 @@ public class DatabaseConnection {
 				count = rs.getInt(1);
 			}
 			if(count<1) {
-				st.execute("Create Table \"Transfer\"(worklogID varchar(255), \"user\" varchar(255), userID varchar(255), customer varchar(255), customerID varchar(255), ordernumber varchar(255), orderposition varchar(255), date datetime, paymentType varchar(255), paymentMethod varchar(255), startTime datetime, endTime datetime, issueKey varchar(255), comment varchar(255), summary varchar(255), project varchar(255), team varchar(255), timeSpent varchar(255), timeSpentSeconds int, billable char(1), parent varchar(255), epic varchar(255), worklogcreate datetime, worklogupdate datetime, PRIMARY KEY(worklogID))");		
+				st.execute("Create Table \"Transfer\"(worklogID varchar(255), \"user\" varchar(255), userID varchar(255), customer varchar(255), customerID varchar(255), ordernumber varchar(255), orderposition varchar(255), date datetime, paymentType varchar(255), paymentMethod varchar(255), startTime datetime, endTime datetime, issueKey varchar(255), comment varchar(255), summary varchar(255), project varchar(255), team varchar(255), timeSpent varchar(255), timeSpentSeconds int, billable char(1), parent varchar(255), epic varchar(255), worklogcreate datetime, worklogupdate datetime, displayText varchar(255), PRIMARY KEY(worklogID))");		
 				st.execute("ALTER TABLE \"Transfer\" " + 
 						"add createdAt datetime " + 
 						"CONSTRAINT DF_Transfer_createdat DEFAULT GETDATE() " + 
