@@ -39,40 +39,39 @@ public class DatabaseConnection {
 	public void sendInsertOrUpdate4Aurea(ArrayList<AureaWorklog> aureaWorklogs) {
 //		StringBuffer sql = new StringBuffer("INSERT INTO 'TRANSFER' (worklogID, \"user\", userID, customer, customerID, ordernumber, orderposition, date, paymentType, paymentMethod, startTime, endTime, issueKey, comment, summary, project, team, timeSpent, timeSpentSeconds, billable, parent, epic, worklogcreate, worklogupdate, displayText) VALUES ");
 		StringBuffer sql = new StringBuffer("MERGE \"Transfer\" AS t USING (VALUES ");
-		SimpleDateFormat format = new SimpleDateFormat(".yyyyMMdd HH:mm:ss");
+		SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
 		for (AureaWorklog worklog : aureaWorklogs) {
-			sql.append("(").append(worklog.getWorklogID());
-			sql.append(",").append(worklog.getUser());
-			sql.append(",").append(worklog.getUserID());
-			sql.append(",").append(worklog.getCustomer());
-			sql.append(",").append(worklog.getCustomerID());
-			sql.append(",").append(worklog.getOrdernumber());
-			sql.append(",").append(worklog.getOrderposition());
-			sql.append(",").append(format.format(worklog.getDate()));
-			sql.append(",").append(worklog.getPaymentType());
-			sql.append(",").append(worklog.getPaymentMethod());
-			sql.append(",").append(format.format(worklog.getStartTime()));
-			sql.append(",").append(format.format(worklog.getEndTime()));
-			sql.append(",").append(worklog.getIssueKey());
-			sql.append(",").append(worklog.getComment());
-			sql.append(",").append(worklog.getSummary());
-			sql.append(",").append(worklog.getProject());
-			sql.append(",").append(worklog.getTeam());
-			sql.append(",").append(worklog.getIssueKey());
-			sql.append(",").append(worklog.getTimeSpent());
-			sql.append(",").append(worklog.getTimeSpentSeconds());
-			sql.append(",").append(worklog.isBillable()?"Y":"N");
-			sql.append(",").append(worklog.getParent());
-			sql.append(",").append(worklog.getEpic());
-			sql.append(",").append(format.format(worklog.getCreate()));
-			sql.append(",").append(format.format(worklog.getUpdate()));;
-			sql.append(",").append(worklog.getDisplayText());
-			
+			sql.append("(").append("'").append(worklog.getWorklogID()).append("'");
+			sql.append(",").append("'").append(worklog.getUser()).append("'");
+			sql.append(",").append("'").append(worklog.getUserID()).append("'");
+			sql.append(",").append("'").append(worklog.getCustomer()).append("'");
+			sql.append(",").append("'").append(worklog.getCustomerID()).append("'");
+			sql.append(",").append("'").append(worklog.getOrdernumber()).append("'");
+			sql.append(",").append("'").append(worklog.getOrderposition()).append("'");
+			sql.append(",").append("'").append(format.format(worklog.getDate())).append("'");
+			sql.append(",").append("'").append(worklog.getPaymentType()).append("'");
+			sql.append(",").append("'").append(worklog.getPaymentMethod()).append("'");
+			sql.append(",").append("'").append(format.format(worklog.getStartTime())).append("'");
+			sql.append(",").append("'").append(format.format(worklog.getEndTime())).append("'");
+			sql.append(",").append("'").append(worklog.getIssueKey()).append("'");
+			sql.append(",").append("'").append(worklog.getComment()).append("'");
+			sql.append(",").append("'").append(worklog.getSummary()).append("'");
+			sql.append(",").append("'").append(worklog.getProject()).append("'");
+			sql.append(",").append("'").append(worklog.getTeam()).append("'");
+			sql.append(",").append("'").append(worklog.getTimeSpent()).append("'");
+			sql.append(",").append("'").append(worklog.getTimeSpentSeconds()).append("'");
+			sql.append(",").append("'").append(worklog.isBillable()?"Y":"N").append("'");
+			sql.append(",").append("'").append(worklog.getParent()).append("'");
+			sql.append(",").append("'").append(worklog.getEpic()).append("'");
+			sql.append(",").append("'").append(format.format(worklog.getCreate())).append("'");
+			sql.append(",").append("'").append(format.format(worklog.getUpdate())).append("'");
+			sql.append(",").append("'").append(worklog.getDisplayText()).append("'").append("),");
 		}
+		sql.deleteCharAt(sql.length()-1);
 		sql.append(") AS s (worklogID, \"user\", userID, customer, customerID, ordernumber, orderposition, date, paymentType, paymentMethod, startTime, endTime, issueKey, comment, summary, project, team, timeSpent, timeSpentSeconds, billable, parent, epic, worklogcreate, worklogupdate, displayText)");
-		sql.append(" ON s.worklogID =t.worklogID WHEN MATCHED THEN UPDATE \"user\" = s.\"user\",userID = s.userID,customer = s.customer,customerID = s.customerID,ordernumber = s.ordernumber,orderposition = s.orderposition,date = s.date,paymentType = s.paymentType,paymentMethod = s.paymentMethod,startTime = s.startTime,endTime = s.endTime,issueKey = s.issueKey,comment = s.comment,summary = s.summary,project = s.project,team = s.team,timeSpent = s.timeSpent,timeSpentSeconds = s.timeSpentSeconds,billable = s.billable,parent = s.parent,epic = s.epic,worklogcreate = s.worklogcreate, worklogupdate = s.worklogupdate, displayText =  s.displayText");
-		sql.append(" WHEN NOT MATCHED THEN INSERT (worklogID, \\\"user\\\", userID, customer, customerID, ordernumber, orderposition, date, paymentType, paymentMethod, startTime, endTime, issueKey, comment, summary, project, team, timeSpent, timeSpentSeconds, billable, parent, epic, worklogcreate, worklogupdate, displayText) VALUES \")");
-		sql.append(" (s.worklogID, s.\"user\", s.userID, s.customer, s.customerID, s.ordernumber, s.orderposition, s.date, s.paymentType, s.paymentMethod, s.startTime, s.endTime, s.issueKey, s.comment, s.summary, s.project, s.team, s.timeSpent, s.timeSpentSeconds, s.billable, s.parent, s.epic, s.worklogcreate, s.worklogupdate, s.displayText)");
+		sql.append(" ON s.worklogID =t.worklogID WHEN MATCHED THEN UPDATE SET \"user\" = s.\"user\",userID = s.userID,customer = s.customer,customerID = s.customerID,ordernumber = s.ordernumber,orderposition = s.orderposition,date = s.date,paymentType = s.paymentType,paymentMethod = s.paymentMethod,startTime = s.startTime,endTime = s.endTime,issueKey = s.issueKey,comment = s.comment,summary = s.summary,project = s.project,team = s.team,timeSpent = s.timeSpent,timeSpentSeconds = s.timeSpentSeconds,billable = s.billable,parent = s.parent,epic = s.epic,worklogcreate = s.worklogcreate, worklogupdate = s.worklogupdate, displayText =  s.displayText");
+		sql.append(" WHEN NOT MATCHED THEN INSERT (worklogID, \"user\", userID, customer, customerID, ordernumber, orderposition, date, paymentType, paymentMethod, startTime, endTime, issueKey, comment, summary, project, team, timeSpent, timeSpentSeconds, billable, parent, epic, worklogcreate, worklogupdate, displayText) VALUES");
+		sql.append(" (s.worklogID, s.\"user\", s.userID, s.customer, s.customerID, s.ordernumber, s.orderposition, s.date, s.paymentType, s.paymentMethod, s.startTime, s.endTime, s.issueKey, s.comment, s.summary, s.project, s.team, s.timeSpent, s.timeSpentSeconds, s.billable, s.parent, s.epic, s.worklogcreate, s.worklogupdate, s.displayText);");
 		
 		try {
 			Statement st = con.createStatement();

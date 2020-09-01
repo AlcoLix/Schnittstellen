@@ -152,12 +152,12 @@ public class MainFrame {
 			}
 		});
 		data.add(search);
-		JMenuItem save = new JMenuItem("CSV speichern");
+		JMenuItem save = new JMenuItem("in CSV/Datenbank speichern");
 		save.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK));
 		save.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				exportToFile();
+				exportToFileOrDatabase();
 			}
 		});
 		data.add(save);
@@ -553,7 +553,7 @@ public class MainFrame {
 		}
 	}
 
-	private void exportToFile() {
+	private void exportToFileOrDatabase() {
 		if(currentSearchMode.equals(searchMode.Worklog)) {
 			if (worklogList.size() > 0) {
 				String s = JOptionPane.showInputDialog(frame, "Dateiname angeben (ohne Endung)", "Exportdatei speichern",
@@ -607,6 +607,8 @@ public class MainFrame {
 						e.printStackTrace();
 					}
 				}
+				DatabaseConnection.getInstance().connect();
+				DatabaseConnection.getInstance().sendInsertOrUpdate4Aurea(aureaList);
 			}
 		}
 	}
