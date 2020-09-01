@@ -40,6 +40,22 @@ public class AureaMapping {
 		}
 		return "";
 	}
+	/**
+	 * 
+	 * @param searchString the JiraID of the employee
+	 * @return the Aurea ID
+	 */
+	public static String getEmployeeName(String searchString) {
+		if(employees==null) {
+			init();
+		}
+		for (Employee employee : employees) {
+			if(employee.getJira().equalsIgnoreCase(searchString)) {
+				return employee.getNachname()+" "+employee.getVorname();
+			}
+		}
+		return "";
+	}
 	
 	private static void init() {
 		try {

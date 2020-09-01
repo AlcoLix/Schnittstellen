@@ -40,7 +40,6 @@ public class JiraParser {
 			aurea.setComment(comment);
 			aurea.setTimeSpent(worklogs.getJSONObject(i).getString("timeSpent"));
 			aurea.setTimeSpentSeconds(worklogs.getJSONObject(i).getLong("timeSpentSeconds"));
-			aurea.setUser(worklogs.getJSONObject(i).getJSONObject("author").getString("displayName"));
 			aurea.setUserID(worklogs.getJSONObject(i).getJSONObject("author").getString("accountId"));
 			//Date and Time Fields
 			Calendar c = Calendar.getInstance();
@@ -105,10 +104,11 @@ public class JiraParser {
 			//Calculated fields
 			aurea.setCustomerID(AureaMapping.getCustomerNumber(aurea.getCustomer()));
 			aurea.setUserID(AureaMapping.getEmployeeNumber(aurea.getUserID()));
+			aurea.setUser(AureaMapping.getEmployeeName(aurea.getUserID()));
 			//TODO Tickettyp berücksichtigen
 			aurea.setPaymentMethod(aurea.isBillable()?"J":"N");
 			//A, wenn eine Auftragsnummer eingetragen ist, K, wenn keine Auftragsnummer aber abrechenbar, sonst S
-			aurea.setPaymentType(!StringUtils.isEmpty(aurea.getOrdernumber())?"A(Auftrag)":aurea.isBillable()?"K(Kunde n. Aufwand)":"S(Support)");
+			aurea.setPaymentType(!StringUtils.isEmpty(aurea.getOrdernumber())?"A (Auftrag)":aurea.isBillable()?"K (Kunde n. Aufwand)":"S (Support)");
 			String team = "ERP";
 			if(StringUtils.containsAny(aurea.getUserID(),"139584","139659","149112","158883")) {
 				team = "CRM";

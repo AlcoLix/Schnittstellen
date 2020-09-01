@@ -174,7 +174,7 @@ public class DatabaseConnection {
 				st.execute("CREATE VIEW TransferView " + 
 						"AS " + 
 						"SELECT worklogID, userID, [user], customer, customerID, CASE WHEN LEN(ordernumber) = 0 THEN '' ELSE Concat(ordernumber, '- ', orderposition) END AS [order], paymentType, paymentMethod, issueKey, team, " + 
-						"displayText, updatedAt, createdAt, FORMAT(startTime, N'HH:mm') AS startTime, FORMAT(endTime, N'HH:mm') AS endTime, FORMAT(date, N'dd.MM.yyyy') AS date " + 
+						"displayText, updatedAt, createdAt, FORMAT(startTime, N'HH:mm') AS startTime, FORMAT(endTime, N'HH:mm') AS endTime, FORMAT(date, N'dd.MM.yyyy') AS date, ordernumber, orderposition " + 
 						"FROM dbo.Transfer");
 			}
 		} catch (SQLException e) {
