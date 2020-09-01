@@ -88,6 +88,10 @@ public class JiraParser {
 			aurea.setDate(c.getTime());
 			
 			c.add(Calendar.SECOND, (int)aurea.getTimeSpentSeconds());
+			//Evil hack if the time is 00:00
+			if(c.get(Calendar.HOUR_OF_DAY)==0&&c.get(Calendar.MINUTE)==0){
+				c.add(Calendar.MINUTE, -1);
+			}
 			aurea.setEndTime(c.getTime());
 			
 			//worklog dependent fields

@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -32,6 +33,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -55,6 +57,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableRowSorter;
+import javax.swing.text.NumberFormatter;
 
 import Jira.AureaWorklog;
 import Jira.JiraApiHelper;
@@ -62,6 +65,7 @@ import Jira.JiraParser;
 import Jira.Task;
 import Jira.Worklog;
 import Jira.database.DatabaseConnection;
+import Jira.scripting.AureaScript;
 import Jira.scripting.Script;
 import Jira.scripting.ScriptStep;
 import Jira.utils.CalendarUtils;
@@ -188,6 +192,22 @@ public class MainFrame {
 			}
 		});
 		scripting.add(editScript);
+		JMenuItem newAureaScript = new JMenuItem("Aurea Script erstellen");
+		newAureaScript.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				openAureaScriptDialog(true);
+			}
+		});
+		scripting.add(newAureaScript);
+		JMenuItem editAureaScript = new JMenuItem("Aurea Script ändern");
+		editAureaScript.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				openAureaScriptDialog(false);
+			}
+		});
+		scripting.add(editAureaScript);
 		JMenuItem executeScript = new JMenuItem("Ausführen");
 		executeScript.addActionListener(new ActionListener() {
 			@Override
@@ -496,9 +516,12 @@ public class MainFrame {
 			settingsDialog.setVisible(true);
 		}
 	}
-	
+
 	private void openScriptDialog(boolean createNew) {
 		new ScriptDialog(createNew);
+	}
+	private void openAureaScriptDialog(boolean createNew) {
+		new AureaScriptDialog(createNew);
 	}
 	private void openExecuteScriptDialog() {
 		File f;
@@ -627,6 +650,99 @@ public class MainFrame {
 		return instance;
 	}
 
+	@SuppressWarnings("serial")
+	private class AureaScriptDialog extends JDialog{
+		private AureaScript script;
+		private JTextField path;
+		public AureaScriptDialog(boolean createNew) {
+			super(frame, true);
+			setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+			String name = "";
+			if(createNew) {
+				name = JOptionPane.showInputDialog(this, "Bitte Scriptnamen angeben","",JOptionPane.INFORMATION_MESSAGE);
+			}else {
+				File f;
+				String[] files = new String[0];
+				try {
+					f = new File(main.Main.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+					if(f.isDirectory()&&f.exists()) {
+						files = f.list(new FilenameFilter() {
+							@Override
+							public boolean accept(File dir, String name) {
+								return name.endsWith(".scr");
+							}
+						});
+					}
+					if(files.length==0) {
+						files = f.getParentFile().list(new FilenameFilter() {
+							@Override
+							public boolean accept(File dir, String name) {
+								return name.endsWith(".scr");
+							}
+						});
+					}
+				} catch (URISyntaxException e) {
+					e.printStackTrace();
+				}
+				if(files.length>0) {
+					Object o = JOptionPane.showInputDialog(this, "Bitte Scriptnamen auswählen", "", JOptionPane.INFORMATION_MESSAGE, null, files, files[0]);
+					if(o!=null) {
+						name = o.toString();
+					}
+				}else {
+					name = JOptionPane.showInputDialog(this, "Keine Daten gefunden, bitte neuen Scriptnamen angeben","",JOptionPane.INFORMATION_MESSAGE);
+				}
+			}
+			if(!StringUtils.isEmpty(name)){
+				name = name.split("\\.")[0];
+				initContent(name);
+				pack();
+				setVisible(true);
+				GuiUtils.centerDialogOnWindow(this, frame);
+			}
+		}
+		private void initContent(String name) {
+			script = AureaScript.getScript(name);
+			setLayout(new BorderLayout());
+			JPanel centerPanel = new JPanel(new GridLayout(0, 2));
+			add(centerPanel, BorderLayout.CENTER);
+			centerPanel.add(new JLabel("Tage Vorlauf"));
+			JSpinner daysField = new JSpinner(new SpinnerNumberModel(1, 0, 365, 1));
+			daysField.setValue(script.getDaysEarlier());
+			centerPanel.add(daysField);
+			daysField.addChangeListener(new ChangeListener() {
+				@Override
+				public void stateChanged(ChangeEvent e) {
+					script.setDaysEarlier((Integer)daysField.getValue());
+				}
+			});
+			JPanel buttonBar = new JPanel();
+			add(buttonBar, BorderLayout.SOUTH);
+			JButton save = new JButton("Speichern");
+			save.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					save();
+				}
+			});
+			buttonBar.add(save);
+			JButton execute = new JButton("Ausführen");
+			execute.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					execute();
+				}
+			});
+			buttonBar.add(execute);
+		}
+		private void save() {
+			script.save();
+		}
+		private void execute() {
+			script.execute();
+		}
+	}
+	
 	@SuppressWarnings("serial")
 	private class ScriptDialog extends JDialog {
 		private Script script;
