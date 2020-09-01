@@ -102,9 +102,9 @@ public class JiraParser {
 			aurea.setSummary(t.getSummary());
 			
 			//Calculated fields
+			aurea.setUser(AureaMapping.getEmployeeName(aurea.getUserID()));
 			aurea.setCustomerID(AureaMapping.getCustomerNumber(aurea.getCustomer()));
 			aurea.setUserID(AureaMapping.getEmployeeNumber(aurea.getUserID()));
-			aurea.setUser(AureaMapping.getEmployeeName(aurea.getUserID()));
 			//TODO Tickettyp berücksichtigen
 			aurea.setPaymentMethod(aurea.isBillable()?"J":"N");
 			//A, wenn eine Auftragsnummer eingetragen ist, K, wenn keine Auftragsnummer aber abrechenbar, sonst S
