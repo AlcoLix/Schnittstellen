@@ -164,6 +164,19 @@ public class DatabaseConnection {
 						"end ");
 		    	st.close();
 			}
+			st.execute("select count(*) FROM sys.views where name = 'TransferView'");
+			rs = st.getResultSet();
+			if(rs != null) {
+				rs.next();
+				count = rs.getInt(1);
+			}
+			if(count<1) {
+				st.execute("CREATE VIEW TransferView " + 
+						"AS " + 
+						"SELECT worklogID, userID, [user], customer, customerID, CASE WHEN LEN(ordernumber) = 0 THEN '' ELSE Concat(ordernumber, '- ', orderposition) END AS [order], paymentType, paymentMethod, issueKey, team, " + 
+						"displayText, updatedAt, createdAt, FORMAT(startTime, N'HH:mm') AS startTime, FORMAT(endTime, N'HH:mm') AS endTime, FORMAT(date, N'dd.MM.yyyy') AS date " + 
+						"FROM dbo.Transfer");
+			}
 		} catch (SQLException e) {
 			e.printStackTrace(System.err);
 		    System.err.println("SQLState: " +
