@@ -108,7 +108,7 @@ public class JiraParser {
 			//TODO Tickettyp berücksichtigen
 			aurea.setPaymentMethod(aurea.isBillable()?"J":"N");
 			//A, wenn eine Auftragsnummer eingetragen ist, K, wenn keine Auftragsnummer aber abrechenbar, sonst S
-			aurea.setPaymentType(!StringUtils.isEmpty(aurea.getOrdernumber())?"A":aurea.isBillable()?"K":"S");
+			aurea.setPaymentType(!StringUtils.isEmpty(aurea.getOrdernumber())?"A(Auftrag)":aurea.isBillable()?"K(Kunde n. Aufwand)":"S(Support)");
 			String team = "ERP";
 			if(StringUtils.containsAny(aurea.getUserID(),"139584","139659","149112","158883")) {
 				team = "CRM";
