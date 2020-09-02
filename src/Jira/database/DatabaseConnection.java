@@ -149,7 +149,7 @@ public class DatabaseConnection {
 				count = rs.getInt(1);
 			}
 			if(count<1) {
-				st.execute("Create Table \"Transfer\"(worklogID varchar(255), \"user\" varchar(255), userID varchar(255), customer varchar(255), customerID varchar(255), ordernumber varchar(255), orderposition varchar(255), date datetime, paymentType varchar(255), paymentMethod varchar(255), startTime datetime, endTime datetime, issueKey varchar(255), comment varchar(max), summary varchar(max), project varchar(255), team varchar(255), timeSpent varchar(255), timeSpentSeconds int, billable char(1), parent varchar(255), epic varchar(255), worklogcreate datetime, worklogupdate datetime, displayText varchar(max), PRIMARY KEY(worklogID))");		
+				st.execute("Create Table \"Transfer\"(worklogID varchar(255), \"user\" varchar(255), userID varchar(255), customer varchar(255), customerID varchar(255), ordernumber varchar(255), orderposition varchar(255), date datetime, paymentType varchar(255), paymentMethod varchar(255), startTime datetime, endTime datetime, issueKey varchar(255), comment varchar(max), summary varchar(max), project varchar(255), team varchar(255), timeSpent varchar(255), timeSpentSeconds int, billable char(1), parent varchar(255), epic varchar(255), worklogcreate datetime, worklogupdate datetime, displayText varchar(max), errorCode int null, PRIMARY KEY(worklogID))");		
 				st.execute("ALTER TABLE \"Transfer\" " + 
 						"add createdAt datetime " + 
 						"CONSTRAINT DF_Transfer_createdat DEFAULT GETDATE() " + 

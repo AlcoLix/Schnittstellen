@@ -74,6 +74,10 @@ public class JiraParser {
 			c.set(Calendar.HOUR_OF_DAY, Integer.parseInt(date.substring(11, 13)));
 			c.set(Calendar.MINUTE, Integer.parseInt(date.substring(14, 16)));
 			c.set(Calendar.SECOND, Integer.parseInt(date.substring(17, 19)));
+			//Evil hack if the time is 00:00
+			if(c.get(Calendar.HOUR_OF_DAY)==0&&c.get(Calendar.MINUTE)==0){
+				c.add(Calendar.MINUTE, 1);
+			}
 			aurea.setStartTime(c.getTime());
 
 			c.clear();
@@ -108,7 +112,12 @@ public class JiraParser {
 			//Calculated fields
 			aurea.setUser(AureaMapping.getEmployeeName(aurea.getUserID()));
 			aurea.setCustomerID(AureaMapping.getCustomerNumber(aurea.getCustomer()));
-			aurea.setUserID(AureaMapping.getEmployeeNumber(aurea.getUserID()));
+			//Part TB
+			if(aurea.getCustomerID().equals("1")) {
+				aurea.setUserID(AureaMapping.getEmployeeNumber(aurea.getUserID()));
+			} else {
+				aurea.setUserID("");
+			}
 			//TODO Tickettyp berücksichtigen
 			aurea.setPaymentMethod(aurea.isBillable()?"J":"N");
 			//A, wenn eine Auftragsnummer eingetragen ist, K, wenn keine Auftragsnummer aber abrechenbar, sonst S
@@ -807,9 +816,9 @@ public class JiraParser {
 				csvString.append(";");
 			}
 			if(tb.getStartTime()!=null) {
-				csvString.append(timeFormat.format(tb.getStartTime())).append(";");
+				csvString.append(timeFormat.format(tb.getStartTime())).append("\r\n");
 			}else {
-				csvString.append(";");
+				csvString.append("\r\n");
 			}
 		}
 		return csvString;
