@@ -54,8 +54,8 @@ public class DatabaseConnection {
 			sql.append(",").append("'").append(format.format(worklog.getStartTime())).append("'");
 			sql.append(",").append("'").append(format.format(worklog.getEndTime())).append("'");
 			sql.append(",").append("'").append(worklog.getIssueKey()).append("'");
-			sql.append(",").append("'").append(worklog.getComment()).append("'");
-			sql.append(",").append("'").append(worklog.getSummary()).append("'");
+			sql.append(",").append("'").append(worklog.getComment().replaceAll("'", "''")).append("'");
+			sql.append(",").append("'").append(worklog.getSummary().replaceAll("'", "''")).append("'");
 			sql.append(",").append("'").append(worklog.getProject()).append("'");
 			sql.append(",").append("'").append(worklog.getTeam()).append("'");
 			sql.append(",").append("'").append(worklog.getTimeSpent()).append("'");
@@ -65,7 +65,7 @@ public class DatabaseConnection {
 			sql.append(",").append("'").append(worklog.getEpic()).append("'");
 			sql.append(",").append("'").append(format.format(worklog.getCreate())).append("'");
 			sql.append(",").append("'").append(format.format(worklog.getUpdate())).append("'");
-			sql.append(",").append("'").append(worklog.getDisplayText()).append("'").append("),");
+			sql.append(",").append("'").append(worklog.getDisplayText().replaceAll("'", "''")).append("'").append("),");
 		}
 		sql.deleteCharAt(sql.length()-1);
 		sql.append(") AS s (worklogID, \"user\", userID, customer, customerID, ordernumber, orderposition, date, paymentType, paymentMethod, startTime, endTime, issueKey, comment, summary, project, team, timeSpent, timeSpentSeconds, billable, parent, epic, worklogcreate, worklogupdate, displayText)");
@@ -74,6 +74,7 @@ public class DatabaseConnection {
 		sql.append(" (s.worklogID, s.\"user\", s.userID, s.customer, s.customerID, s.ordernumber, s.orderposition, s.date, s.paymentType, s.paymentMethod, s.startTime, s.endTime, s.issueKey, s.comment, s.summary, s.project, s.team, s.timeSpent, s.timeSpentSeconds, s.billable, s.parent, s.epic, s.worklogcreate, s.worklogupdate, s.displayText);");
 		
 		try {
+//			System.out.println(sql.toString());
 			Statement st = con.createStatement();
 			st.execute(sql.toString());
 		} catch (SQLException e) {
@@ -148,7 +149,7 @@ public class DatabaseConnection {
 				count = rs.getInt(1);
 			}
 			if(count<1) {
-				st.execute("Create Table \"Transfer\"(worklogID varchar(255), \"user\" varchar(255), userID varchar(255), customer varchar(255), customerID varchar(255), ordernumber varchar(255), orderposition varchar(255), date datetime, paymentType varchar(255), paymentMethod varchar(255), startTime datetime, endTime datetime, issueKey varchar(255), comment varchar(255), summary varchar(255), project varchar(255), team varchar(255), timeSpent varchar(255), timeSpentSeconds int, billable char(1), parent varchar(255), epic varchar(255), worklogcreate datetime, worklogupdate datetime, displayText varchar(255), PRIMARY KEY(worklogID))");		
+				st.execute("Create Table \"Transfer\"(worklogID varchar(255), \"user\" varchar(255), userID varchar(255), customer varchar(255), customerID varchar(255), ordernumber varchar(255), orderposition varchar(255), date datetime, paymentType varchar(255), paymentMethod varchar(255), startTime datetime, endTime datetime, issueKey varchar(255), comment varchar(max), summary varchar(max), project varchar(255), team varchar(255), timeSpent varchar(255), timeSpentSeconds int, billable char(1), parent varchar(255), epic varchar(255), worklogcreate datetime, worklogupdate datetime, displayText varchar(max), PRIMARY KEY(worklogID))");		
 				st.execute("ALTER TABLE \"Transfer\" " + 
 						"add createdAt datetime " + 
 						"CONSTRAINT DF_Transfer_createdat DEFAULT GETDATE() " + 
@@ -162,7 +163,6 @@ public class DatabaseConnection {
 						"	from \"Transfer\" inner join deleted d " + 
 						"	on \"Transfer\".worklogID=d.worklogID " + 
 						"end ");
-		    	st.close();
 			}
 			st.execute("select count(*) FROM sys.views where name = 'TransferView'");
 			rs = st.getResultSet();
@@ -177,6 +177,7 @@ public class DatabaseConnection {
 						"displayText, updatedAt, createdAt, FORMAT(startTime, N'HH:mm') AS startTime, FORMAT(endTime, N'HH:mm') AS endTime, FORMAT(date, N'dd.MM.yyyy') AS date, ordernumber, orderposition " + 
 						"FROM dbo.Transfer");
 			}
+	    	st.close();
 		} catch (SQLException e) {
 			e.printStackTrace(System.err);
 		    System.err.println("SQLState: " +
