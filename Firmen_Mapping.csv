@@ -51,7 +51,7 @@ Nola Chemie GmbH;2493093;100;17456;SBO;2493093;
 ZWEZ-CHEMIE GmbH;2493158;100;17468;SBO;2493158;
 Barcadi-Martini (Schweiz) AG;10499;100;17475;SBO;10499;
 neumeier AG;10501;100;17512;SBO;10501;
-GBI-Genios Deutsche Wirtschaftsdatenbank GmbH;10549;100;17576;SBO;10549;
+GBI-Genios Deutsche Wirtschaftsdatenbank GmbH;10549;100;17576;SBO;10549;GBI
 Schöler Reinigungsmittel für Industrie und Fahrzeuge;2493128;100;17880;SBO;2493128;
 Mayr Chemie-Technik GmbH;2493080;100;17885;SBO;2493080;
 Schneider GmbHDas Gute für Ihr Wohlbefinden;2493126;100;17939;SBO;2493126;
@@ -660,7 +660,7 @@ NEXTCLINICS INTERNATIONAL GmbH;10672;100;1064853;SBO;10672;
 AVANTGARDE Experts GmbH;10636;100;1064854;SBO;10636;
 APOMEDICA Deutschland GmbH;10641;100;1064878;SBO;10641;
 DVZ DatenverarbeitungszentrumMecklenburg-Vorpommern GmbH;10644;100;1064902;SBO;10644;
-Fachverband landwirtschaftlicher Trocknungen in Bayern e.V.;10649;100;1064946;SBO;10649;FuttertrockungFachverband
+Fachverband landwirtschaftlicher Trocknungen in Bayern e.V.;10649;100;1064946;SBO;10649;Futtertrocknung,FuttertrockungFachverband
 Futtertrocknung Lamerdingen eG;10654;100;1064999;SBO;10654;FuttertrockungLamerdingen
 EASY SOFTWARE Deutschland GmbH;10652;100;1065009;SBO;10652;
 Grünfuttertrocknungsgenossenschaft Buschhof eG ;10655;100;1065013;SBO;10655;FuttertrockungBuschhof
