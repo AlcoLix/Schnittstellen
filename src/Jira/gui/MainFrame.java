@@ -570,9 +570,11 @@ public class MainFrame {
 	}
 	
 	public static void addDebugLine(String text) {
-		if(getInstance().debugText != null) {
-			getInstance().debugText.append(text);
-			getInstance().debugText.append("\r\n");
+		if(instance!=null) {
+			if(getInstance().debugText != null) {
+				getInstance().debugText.append(text);
+				getInstance().debugText.append("\r\n");
+			}
 		}
 	}
 

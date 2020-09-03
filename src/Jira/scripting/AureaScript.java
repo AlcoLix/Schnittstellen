@@ -47,7 +47,7 @@ public class AureaScript {
 		c.add(Calendar.DAY_OF_MONTH, -getDaysEarlier());
 		
 		JiraApiHelper.getInstance().setBaseString("https://partsolution.atlassian.net/rest/api/latest/worklog/updated");
-		JiraApiHelper.getInstance().appendKeyValue("since=", String.valueOf(c.getTimeInMillis()));
+		JiraApiHelper.getInstance().appendKeyValue("since", String.valueOf(c.getTimeInMillis()));
 		JiraApiHelper.getInstance().appendKeyValue("validateQuery", "warn");
 		JiraApiHelper.getInstance().appendKeyValue("maxResults", "500");
 		Hashtable<String, String> header = new Hashtable<String, String>();

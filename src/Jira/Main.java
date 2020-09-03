@@ -19,7 +19,11 @@ public class Main {
 			for (int i = 0; i < args.length; i++) {
 				boolean isAurea = false;
 				try {
-					BufferedReader reader = new BufferedReader(new  FileReader(args[i]));
+					String filename = args[i];
+					if(!filename.endsWith(".scr")) {
+						filename = filename + ".scr";
+					}
+					BufferedReader reader = new BufferedReader(new  FileReader(filename));
 					String line = reader.readLine();
 					//First line is the header and can be skipped
 					while((line = reader.readLine())!=null) {
