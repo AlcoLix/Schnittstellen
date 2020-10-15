@@ -120,11 +120,23 @@ public class JiraParser {
 			}
 			//TODO Tickettyp berücksichtigen
 			aurea.setPaymentMethod(aurea.isBillable()?"J":"N");
-			//A, wenn eine Auftragsnummer eingetragen ist, K, wenn keine Auftragsnummer aber abrechenbar, sonst S
-			aurea.setPaymentType(!StringUtils.isEmpty(aurea.getOrdernumber())?"A (Auftrag)":aurea.isBillable()?"K (Kunde n. Aufwand)":"S (Support)");
+			if(t.getIssueType().equalsIgnoreCase("support")){
+				//Wenn Support, dann support (Doh!)
+				aurea.setPaymentType("S (Support)");
+			} else {
+				//A, wenn eine Auftragsnummer eingetragen ist, K, wenn keine Auftragsnummer
+				aurea.setPaymentType(!StringUtils.isEmpty(aurea.getOrdernumber())?"A (Auftrag)":"K (Kunde n. Aufwand)");
+			}
 			String team = "ERP";
 			if(StringUtils.containsAny(aurea.getUserID(),"139584","139659","149112","158883")) {
 				team = "CRM";
+			}
+			//Part TB ist immer nTB, niemals support
+			if(aurea.getCustomerID().equals("1")) {
+				aurea.setPaymentMethod("N");
+				if(aurea.getPaymentType().equalsIgnoreCase("S (Support)")){
+					aurea.setPaymentType("K (Kunde n. Aufwand)");
+				}
 			}
 			aurea.setTeam(team);
 			retval.add(aurea);
@@ -203,13 +215,13 @@ public class JiraParser {
 		t.setEpic(epic);
 		//Fallback, if the Ordernumber is only set in the Epic
 		String ordernumber = "";
-		if(StringUtils.isEmpty(t.getOrdernumber())&&!StringUtils.isEmpty(epic)) {
-			ordernumber = Epic.getEpic(epic).getOrdernumber();
-		}
+//		if(StringUtils.isEmpty(t.getOrdernumber())&&!StringUtils.isEmpty(epic)) {
+//			ordernumber = Epic.getEpic(epic).getOrdernumber();
+//		}
 		String orderposition = "";
-		if(StringUtils.isEmpty(t.getOrderposition())&&!StringUtils.isEmpty(epic)) {
-			orderposition = Epic.getEpic(epic).getOrderposition();
-		}
+//		if(StringUtils.isEmpty(t.getOrderposition())&&!StringUtils.isEmpty(epic)) {
+//			orderposition = Epic.getEpic(epic).getOrderposition();
+//		}
 		if(StringUtils.isEmpty(t.getOrdernumber())) {
 			t.setOrdernumber(ordernumber);
 		}
@@ -232,13 +244,13 @@ public class JiraParser {
 			worklog.setEpic(epic);
 			//Fallback, if the Ordernumber is only set in the Epic
 			String ordernumber = "";
-			if(StringUtils.isEmpty(worklog.getOrdernumber())&&!StringUtils.isEmpty(epic)) {
-				ordernumber = Epic.getEpic(epic).getOrdernumber();
-			}
+//			if(StringUtils.isEmpty(worklog.getOrdernumber())&&!StringUtils.isEmpty(epic)) {
+//				ordernumber = Epic.getEpic(epic).getOrdernumber();
+//			}
 			String orderposition = "";
-			if(StringUtils.isEmpty(worklog.getOrderposition())&&!StringUtils.isEmpty(epic)) {
-				orderposition = Epic.getEpic(epic).getOrderposition();
-			}
+//			if(StringUtils.isEmpty(worklog.getOrderposition())&&!StringUtils.isEmpty(epic)) {
+//				orderposition = Epic.getEpic(epic).getOrderposition();
+//			}
 			if(StringUtils.isEmpty(worklog.getOrdernumber())) {
 				worklog.setOrdernumber(ordernumber);
 			}
@@ -303,13 +315,13 @@ public class JiraParser {
 			epic = fields.getString("customfield_10014");
 			if(Epic.getEpic(epic) != null) {
 				epic = Epic.getEpic(epic).toString();
-				if(StringUtils.isEmpty(ordernumber)) {
-					//Fallback, if the Ordernumber is only set in the Epic
-					ordernumber = Epic.getEpic(epic).getOrdernumber();
-				}
-				if(StringUtils.isEmpty(orderposition)) {
-					orderposition = Epic.getEpic(epic).getOrderposition();
-				}
+//				if(StringUtils.isEmpty(ordernumber)) {
+//					//Fallback, if the Ordernumber is only set in the Epic
+//					ordernumber = Epic.getEpic(epic).getOrdernumber();
+//				}
+//				if(StringUtils.isEmpty(orderposition)) {
+//					orderposition = Epic.getEpic(epic).getOrderposition();
+//				}
 			}
 		} catch (JSONException e) {
 			
@@ -512,13 +524,13 @@ public class JiraParser {
 			epic = fields.getString("customfield_10014");
 			if(Epic.getEpic(epic) != null) {
 				epic = Epic.getEpic(epic).toString();
-				if(StringUtils.isEmpty(ordernumber)) {
-					//Fallback, if the Ordernumber is only set in the Epic
-					ordernumber = Epic.getEpic(epic).getOrdernumber();
-				}
-				if(StringUtils.isEmpty(orderposition)) {
-					orderposition = Epic.getEpic(epic).getOrderposition();
-				}
+//				if(StringUtils.isEmpty(ordernumber)) {
+//					//Fallback, if the Ordernumber is only set in the Epic
+//					ordernumber = Epic.getEpic(epic).getOrdernumber();
+//				}
+//				if(StringUtils.isEmpty(orderposition)) {
+//					orderposition = Epic.getEpic(epic).getOrderposition();
+//				}
 			}
 		} catch (JSONException e) {
 			
