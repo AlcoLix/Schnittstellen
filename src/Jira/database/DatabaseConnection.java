@@ -4,11 +4,13 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Properties;
@@ -38,42 +40,56 @@ public class DatabaseConnection {
 //	    VALUES (s.Key1, s.Key2, s.Val);
 	public void sendInsertOrUpdate4Aurea(ArrayList<AureaWorklog> aureaWorklogs) {
 //		StringBuffer sql = new StringBuffer("INSERT INTO 'TRANSFER' (worklogID, \"user\", userID, customer, customerID, ordernumber, orderposition, date, paymentType, paymentMethod, startTime, endTime, issueKey, comment, summary, project, team, timeSpent, timeSpentSeconds, billable, parent, epic, worklogcreate, worklogupdate, displayText) VALUES ");
-		StringBuffer sql = new StringBuffer("MERGE \"Transfer\" AS t USING (VALUES ");
-		SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
-		for (AureaWorklog worklog : aureaWorklogs) {
-			sql.append("(").append("'").append(worklog.getWorklogID()).append("'");
-			sql.append(",").append("'").append(worklog.getUser()).append("'");
-			sql.append(",").append("'").append(worklog.getUserID()).append("'");
-			sql.append(",").append("'").append(worklog.getCustomer()).append("'");
-			sql.append(",").append("'").append(worklog.getCustomerID()).append("'");
-			sql.append(",").append("'").append(worklog.getOrdernumber()).append("'");
-			sql.append(",").append("'").append(worklog.getOrderposition()).append("'");
-			sql.append(",").append("'").append(format.format(worklog.getDate())).append("'");
-			sql.append(",").append("'").append(worklog.getPaymentType()).append("'");
-			sql.append(",").append("'").append(worklog.getPaymentMethod()).append("'");
-			sql.append(",").append("'").append(format.format(worklog.getStartTime())).append("'");
-			sql.append(",").append("'").append(format.format(worklog.getEndTime())).append("'");
-			sql.append(",").append("'").append(worklog.getIssueKey()).append("'");
-			sql.append(",").append("'").append(worklog.getComment().replaceAll("'", "''")).append("'");
-			sql.append(",").append("'").append(worklog.getSummary().replaceAll("'", "''")).append("'");
-			sql.append(",").append("'").append(worklog.getProject()).append("'");
-			sql.append(",").append("'").append(worklog.getTeam()).append("'");
-			sql.append(",").append("'").append(worklog.getTimeSpent()).append("'");
-			sql.append(",").append("'").append(worklog.getTimeSpentSeconds()).append("'");
-			sql.append(",").append("'").append(worklog.isBillable()?"Y":"N").append("'");
-			sql.append(",").append("'").append(worklog.getParent()).append("'");
-			sql.append(",").append("'").append(worklog.getEpic()).append("'");
-			sql.append(",").append("'").append(format.format(worklog.getCreate())).append("'");
-			sql.append(",").append("'").append(format.format(worklog.getUpdate())).append("'");
-			sql.append(",").append("'").append(worklog.getDisplayText().replaceAll("'", "''")).append("'").append("),");
-		}
-		sql.deleteCharAt(sql.length()-1);
-		sql.append(") AS s (worklogID, \"user\", userID, customer, customerID, ordernumber, orderposition, date, paymentType, paymentMethod, startTime, endTime, issueKey, comment, summary, project, team, timeSpent, timeSpentSeconds, billable, parent, epic, worklogcreate, worklogupdate, displayText)");
-		sql.append(" ON s.worklogID =t.worklogID WHEN MATCHED THEN UPDATE SET \"user\" = s.\"user\",userID = s.userID,customer = s.customer,customerID = s.customerID,ordernumber = s.ordernumber,orderposition = s.orderposition,date = s.date,paymentType = s.paymentType,paymentMethod = s.paymentMethod,startTime = s.startTime,endTime = s.endTime,issueKey = s.issueKey,comment = s.comment,summary = s.summary,project = s.project,team = s.team,timeSpent = s.timeSpent,timeSpentSeconds = s.timeSpentSeconds,billable = s.billable,parent = s.parent,epic = s.epic,worklogcreate = s.worklogcreate, worklogupdate = s.worklogupdate, displayText =  s.displayText");
-		sql.append(" WHEN NOT MATCHED THEN INSERT (worklogID, \"user\", userID, customer, customerID, ordernumber, orderposition, date, paymentType, paymentMethod, startTime, endTime, issueKey, comment, summary, project, team, timeSpent, timeSpentSeconds, billable, parent, epic, worklogcreate, worklogupdate, displayText) VALUES");
-		sql.append(" (s.worklogID, s.\"user\", s.userID, s.customer, s.customerID, s.ordernumber, s.orderposition, s.date, s.paymentType, s.paymentMethod, s.startTime, s.endTime, s.issueKey, s.comment, s.summary, s.project, s.team, s.timeSpent, s.timeSpentSeconds, s.billable, s.parent, s.epic, s.worklogcreate, s.worklogupdate, s.displayText);");
-		
 		try {
+			CallableStatement cstmt = con.prepareCall("{call dbo.CRM_CRM_UP(?, ?, ?)}");
+		
+			StringBuffer sql = new StringBuffer("MERGE \"Transfer\" AS t USING (VALUES ");
+			SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
+			for (AureaWorklog worklog : aureaWorklogs) {
+				cstmt.setString(1, worklog.getOrdernumber());
+				cstmt.setString(2, worklog.getOrderposition());
+				cstmt.registerOutParameter(3, Types.NVARCHAR);
+				cstmt.execute();
+				ResultSet set = cstmt.getResultSet();
+				String UP_SerNo;
+				if(set!=null&&set.next()) {
+					UP_SerNo = set.getString(1);
+				}else {
+					UP_SerNo = "";
+				}
+				sql.append("(").append("'").append(worklog.getWorklogID()).append("'");
+				sql.append(",").append("'").append(worklog.getUser()).append("'");
+				sql.append(",").append("'").append(worklog.getUserID()).append("'");
+				sql.append(",").append("'").append(worklog.getCustomer()).append("'");
+				sql.append(",").append("'").append(worklog.getCustomerID()).append("'");
+				sql.append(",").append("'").append(worklog.getOrdernumber()).append("'");
+				sql.append(",").append("'").append(worklog.getOrderposition()).append("'");
+				sql.append(",").append("'").append(format.format(worklog.getDate())).append("'");
+				sql.append(",").append("'").append(worklog.getPaymentType()).append("'");
+				sql.append(",").append("'").append(worklog.getPaymentMethod()).append("'");
+				sql.append(",").append("'").append(format.format(worklog.getStartTime())).append("'");
+				sql.append(",").append("'").append(format.format(worklog.getEndTime())).append("'");
+				sql.append(",").append("'").append(worklog.getIssueKey()).append("'");
+				sql.append(",").append("'").append(worklog.getComment().replaceAll("'", "''")).append("'");
+				sql.append(",").append("'").append(worklog.getSummary().replaceAll("'", "''")).append("'");
+				sql.append(",").append("'").append(worklog.getProject()).append("'");
+				sql.append(",").append("'").append(worklog.getTeam()).append("'");
+				sql.append(",").append("'").append(worklog.getTimeSpent()).append("'");
+				sql.append(",").append("'").append(worklog.getTimeSpentSeconds()).append("'");
+				sql.append(",").append("'").append(worklog.isBillable()?"Y":"N").append("'");
+				sql.append(",").append("'").append(worklog.getParent()).append("'");
+				sql.append(",").append("'").append(worklog.getEpic()).append("'");
+				sql.append(",").append("'").append(format.format(worklog.getCreate())).append("'");
+				sql.append(",").append("'").append(format.format(worklog.getUpdate())).append("'");
+				sql.append(",").append("'").append(worklog.getDisplayText().replaceAll("'", "''")).append("'");
+				sql.append(",").append("'").append(UP_SerNo).append("'").append("),");
+			}
+			sql.deleteCharAt(sql.length()-1);
+			sql.append(") AS s (worklogID, \"user\", userID, customer, customerID, ordernumber, orderposition, date, paymentType, paymentMethod, startTime, endTime, issueKey, comment, summary, project, team, timeSpent, timeSpentSeconds, billable, parent, epic, worklogcreate, worklogupdate, displayText, UP_SerNo)");
+			sql.append(" ON s.worklogID =t.worklogID WHEN MATCHED THEN UPDATE SET \"user\" = s.\"user\",userID = s.userID,customer = s.customer,customerID = s.customerID,ordernumber = s.ordernumber,orderposition = s.orderposition,date = s.date,paymentType = s.paymentType,paymentMethod = s.paymentMethod,startTime = s.startTime,endTime = s.endTime,issueKey = s.issueKey,comment = s.comment,summary = s.summary,project = s.project,team = s.team,timeSpent = s.timeSpent,timeSpentSeconds = s.timeSpentSeconds,billable = s.billable,parent = s.parent,epic = s.epic,worklogcreate = s.worklogcreate, worklogupdate = s.worklogupdate, displayText =  s.displayText, UP_SerNo =s.UP_SerNo");
+			sql.append(" WHEN NOT MATCHED THEN INSERT (worklogID, \"user\", userID, customer, customerID, ordernumber, orderposition, date, paymentType, paymentMethod, startTime, endTime, issueKey, comment, summary, project, team, timeSpent, timeSpentSeconds, billable, parent, epic, worklogcreate, worklogupdate, displayText, UP_SerNo) VALUES");
+			sql.append(" (s.worklogID, s.\"user\", s.userID, s.customer, s.customerID, s.ordernumber, s.orderposition, s.date, s.paymentType, s.paymentMethod, s.startTime, s.endTime, s.issueKey, s.comment, s.summary, s.project, s.team, s.timeSpent, s.timeSpentSeconds, s.billable, s.parent, s.epic, s.worklogcreate, s.worklogupdate, s.displayText, s.UP_SerNo);");
+		
 //			System.out.println(sql.toString());
 			Statement st = con.createStatement();
 			st.execute(sql.toString());
@@ -149,7 +165,7 @@ public class DatabaseConnection {
 				count = rs.getInt(1);
 			}
 			if(count<1) {
-				st.execute("Create Table \"Transfer\"(worklogID varchar(255), \"user\" varchar(255), userID varchar(255), customer varchar(255), customerID varchar(255), ordernumber varchar(255), orderposition varchar(255), date datetime, paymentType varchar(255), paymentMethod varchar(255), startTime datetime, endTime datetime, issueKey varchar(255), comment varchar(max), summary varchar(max), project varchar(255), team varchar(255), timeSpent varchar(255), timeSpentSeconds int, billable char(1), parent varchar(255), epic varchar(255), worklogcreate datetime, worklogupdate datetime, displayText varchar(max), errorCode int null, PRIMARY KEY(worklogID))");		
+				st.execute("Create Table \"Transfer\"(worklogID varchar(255), \"user\" varchar(255), userID varchar(255), customer varchar(255), customerID varchar(255), ordernumber varchar(255), orderposition varchar(255), date datetime, paymentType varchar(255), paymentMethod varchar(255), startTime datetime, endTime datetime, issueKey varchar(255), comment varchar(max), summary varchar(max), project varchar(255), team varchar(255), timeSpent varchar(255), timeSpentSeconds int, billable char(1), parent varchar(255), epic varchar(255), worklogcreate datetime, worklogupdate datetime, displayText varchar(max), errorCode int null, UP_SerNo as varchar(255), PRIMARY KEY(worklogID))");		
 				st.execute("ALTER TABLE \"Transfer\" " + 
 						"add createdAt datetime " + 
 						"CONSTRAINT DF_Transfer_createdat DEFAULT GETDATE() " + 
@@ -174,7 +190,7 @@ public class DatabaseConnection {
 				st.execute("CREATE VIEW TransferView " + 
 						"AS " + 
 						"SELECT worklogID, userID, [user], customer, customerID, CASE WHEN LEN(ordernumber) = 0 THEN '' ELSE Concat(ordernumber, '- ', orderposition) END AS [order], paymentType, paymentMethod, issueKey, team, " + 
-						"displayText, updatedAt, createdAt, FORMAT(startTime, N'HH:mm') AS startTime, FORMAT(endTime, N'HH:mm') AS endTime, FORMAT(date, N'dd.MM.yyyy') AS date, ordernumber, orderposition " + 
+						"displayText, updatedAt, createdAt, FORMAT(startTime, N'HH:mm') AS startTime, FORMAT(endTime, N'HH:mm') AS endTime, FORMAT(date, N'dd.MM.yyyy') AS date, ordernumber, orderposition, UP_SerNo" + 
 						"FROM dbo.Transfer");
 			}
 	    	st.close();

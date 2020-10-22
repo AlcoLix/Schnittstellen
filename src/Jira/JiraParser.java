@@ -118,7 +118,6 @@ public class JiraParser {
 			} else {
 				aurea.setUserID("");
 			}
-			//TODO Tickettyp berücksichtigen
 			aurea.setPaymentMethod(aurea.isBillable()?"J":"N");
 			if(t.getIssueType().equalsIgnoreCase("support")){
 				//Wenn Support, dann support (Doh!)
