@@ -4,7 +4,7 @@ PART Business Solution GmbH;10305;100;1;SBO;10305;
 PART Business Solution GmbH;10305;100;1;SBO;10363;
 Orgentis Chemicals GmbH;10500;100;15967;SBO;10500;
 QUIRIS HEALTHCARE GMBH & CO. KG;10529;100;15973;SBO;10529;Quiris
-Arla Foods Amba Headoffice;10609;100;15980;SBO;10609;
+Arla Foods Amba Headoffice;10609;100;15980;SBO;10609;Arla
 Frankenwald Confiserie & Café BauerInhaber: Heidi und Robert Bauer;2493021;100;16032;SBO;2493021;
 pro KÜHLSOLE GmbH;10515;100;16070;SBO;10515;proKühlsole
 C. Jentner GmbH;2492995;100;16094;SBO;2492995;
@@ -79,13 +79,13 @@ HHAC Labor Dr. Heusler GmbH;2493040;100;20522;SBO;2493040;
 Kremer Pigmente GmbH & Co. KG;2493063;100;20595;SBO;2493063;
 OPTOSOL Chemische Produkte GmbH;2493096;100;20690;SBO;2493096;
 Azelis Deutschland GmbH;2492986;100;20854;SBO;2492986;
-Südsachsen Wasser GmbH;10629;100;20875;SBO;10629;
+Südsachsen Wasser GmbH;10629;100;20875;SBO;10629;SüdsachsenWasser
 Heron Innovations Factory GmbH;10548;100;20920;SBO;10548;
 GABRIEL-CHEMIE Gesellschaft m.b.H.(Zentrale);2493023;100;20959;SBO;2493023;
 VEPACK GmbH;2493146;100;20994;SBO;2493146;
 FERNO Transportgeräte GmbH;2493020;100;20997;SBO;2493020;
 MIP Europe GmbH;10582;100;21042;SBO;10582;MIP
-Müller & Biermann GmbH & Co. KG;10581;100;21043;SBO;10581;MüllerUndBiermann
+Müller & Biermann GmbH & Co. KG;10581;100;21043;SBO;10581;MüllerUndBiermann;MüllerBiermann
 keim additec surface GmbH;2493056;100;21071;SBO;2493056;
 Cerdur Ceramic GmbH;2492998;100;21102;SBO;2492998;
 CliQ SwissTech (Deutschland) GmbH;2493000;100;21104;SBO;2493000;
@@ -105,7 +105,7 @@ Geda-Dechentreiter Maschinenbau GmbH;2493026;100;1000176;SBO;2493026;
 METZELER SCHAUM GMBH;;100;1000190;SBO;10185;
 furwa Furnierkanten GmbH;;100;1000279;SBO;10400;
 TRICORPackaging & Logistics AG;10271;100;1000314;SBO;10271;
-W.u.H. Küchle GmbH & Co. KG;10286;100;1000410;SBO;10286;
+W.u.H. Küchle GmbH & Co. KG;10286;100;1000410;SBO;10286;WuHKuechle
 Oettinger Brauerei GmbH;10204;100;1000455;SBO;10204;
 Götzfried + Pitzer Entsorgung GmbH;10113;100;1000692;SBO;10113;
 Borscheid + Wenig GmbH;10037;100;1000788;SBO;10037;
@@ -115,7 +115,7 @@ Elektro Kratochvil KG;;100;1001704;SBO;10082;
 EDEKA Handelsgesellschaft Hessenring mbH;10079;100;1001755;SBO;10079;
 MEA Service GmbH;10552;100;1001761;SBO;10180;
 MEA Service GmbH;10552;100;1001761;SBO;10552;
-MPRESSED GmbH;10193;100;1001833;SBO;10193;
+MPRESSED GmbH;10193;100;1001833;SBO;10193;Mpressed
 Pfeifer Holz GmbH;10011;100;1001840;SBO;10011;
 KUKA Roboter GmbH;;100;1002039;SBO;10159;
 Fahrzeugtechnik Aretsried GmbH;10089;100;1002062;SBO;10089;
@@ -129,7 +129,7 @@ MAN Diesel & Turbo SE;10173;100;1002565;SBO;10173;
 Verlagsgruppe Weltbild GmbH;10445;100;1002566;SBO;10445;
 Andreas Schmid Logistik AG;10010;100;1002567;SBO;10010;
 CREATON GmbH;10059;100;1002596;SBO;10059;
-Wanzl GmbH & Co. KGaA;10287;100;1003004;SBO;10287;
+Wanzl GmbH & Co. KGaA;10287;100;1003004;SBO;10287;Wanzl
 GROB-WERKE GmbH & Co. KG;10114;100;1003006;SBO;10114;
 Sortimo International GmbH;10256;100;1003072;SBO;10256;
 Büro Mayer GmbH & Co. KG;10040;100;1003223;SBO;10040;
@@ -141,7 +141,7 @@ Multivac Sepp Haggenmüller SE & Co. KG;10195;100;1003573;SBO;01095;
 Multivac Sepp Haggenmüller SE & Co. KG;10195;100;1003573;SBO;10195;
 Baldwin Technology GmbH;10023;100;1003581;SBO;10023;
 Erhardt + Leimer GmbH;10479;100;1003584;SBO;10479;ErhardtUndLeimer
-IBA Hartmann GmbH & Co. KG;10136;100;1003587;SBO;10136;
+IBA Hartmann GmbH & Co. KG;10136;100;1003587;SBO;10136;IBA
 Gebr. Swoboda GmbH;;100;1003609;SBO;10106;
 Renk AG;;100;1003737;SBO;10219;
 EASY SOFTWARE AG;10078;100;1003764;SBO;10078;
@@ -149,7 +149,7 @@ Otto Christ AG Autowaschanlagen;2493098;100;1003803;SBO;2493098;
 Krenn GmbH & Co. KG;10290;100;1003868;SBO;10290;
 system-technik GmbH;2493136;100;1003920;SBO;10396;
 system-technik GmbH;2493136;100;1003920;SBO;2493136;
-Klinikum rechts der Isarder Technischen Universität München;10584;100;1003974;SBO;10584;
+Klinikum rechts der Isarder Technischen Universität München;10584;100;1003974;SBO;10584;KlinikumRechtsDerIsarDerTU
 SAP Deutschland SE & Co. KG;10316;100;1003995;SBO;10316;
 Novoflex Präzisionstechnik GmbH;2493094;100;1004165;SBO;2493094;
 Ernst & Kühbandner Consultants und Developers GmbH;10085;100;1004238;SBO;10085;
@@ -178,12 +178,12 @@ Messerle GmbH;10183;100;1007037;SBO;10183;
 Sedus Stoll AG;10439;100;1007241;SBO;10439;
 Kersia Deutschland GmbH;10631;100;1007419;SBO;10630;
 Kersia Deutschland GmbH;10631;100;1007419;SBO;10631;Kersia
-Weber & Weber GmbH & Co. KG;10547;100;1007423;SBO;10547;
+Weber & Weber GmbH & Co. KG;10547;100;1007423;SBO;10547;Weber&Weber
 Pharmpur GmbH;10606;100;1007488;SBO;10606;
 Bauer AG;10025;100;1007526;SBO;10025;
 Arnold & Richter Cinetechnik;10013;100;1007836;SBO;10013;
 Carl Schlenk AG;10047;100;1007848;SBO;10047;
-LHI Leasing GmbH;10604;100;1007850;SBO;10604;
+LHI Leasing GmbH;10604;100;1007850;SBO;10604;LHI
 Nitsch & Mendler GmbH;2493092;100;1007915;SBO;2493092;
 UZIN UTZ AG;10385;100;1008232;SBO;10385;
 P-D Interglas Technologies GmbH;10527;100;1008240;SBO;10527;
@@ -192,7 +192,7 @@ Culina LogisticsGmbH;10060;100;1008288;SBO;10060;
 EnBW Ostwürttemberg DonauRies AG;10084;100;1008456;SBO;10084;
 Hauff-Technik GmbH & Co. KG;10124;100;1008458;SBO;10123;
 Hauff-Technik GmbH & Co. KG;10124;100;1008458;SBO;10124;
-Hugo Boss AG;10134;100;1008506;SBO;10134;
+Hugo Boss AG;10134;100;1008506;SBO;10134;HugoBoss
 Rupert App GmbH & Co.;10229;100;1008530;SBO;10229;
 Schabmüller GmbH;10241;100;1008696;SBO;10241;
 FAIST Systeme GmbH;10300;100;1008714;SBO;10300;
@@ -292,13 +292,13 @@ Bayern Invest Kapitalanlagegesellschaft mbh;10028;100;1020985;SBO;10028;
 Hengstler GmbH;10377;100;1020986;SBO;10377;
 System Consult AG;;100;1020989;SBO;10268;
 DeutschsprachigeSAP Anwendergruppe e.V.;10070;100;1021224;SBO;10070;
-VEDAG GmbH;10542;100;1021229;SBO;10281;
-VEDAG GmbH;10542;100;1021229;SBO;10542;
+VEDAG GmbH;10542;100;1021229;SBO;10281;VEDAG
+VEDAG GmbH;10542;100;1021229;SBO;10542;VEDAG
 Haas Werkzeugmaschinen GmbH;10504;100;1021241;SBO;10504;
 K2S IT-Solutions & Services GmbH;10153;100;1021384;SBO;10153;
 Land- und Kraftfahrzeugtechnik GmbHStadtilm;2493065;100;1021449;SBO;2493065;
 F & O Interfreight GmbH;10087;100;1021462;SBO;10087;
-HEWI Heinrich Wilke GmbH;10556;100;1021970;SBO;10556;
+HEWI Heinrich Wilke GmbH;10556;100;1021970;SBO;10556;HEWI
 REIFF Management und Service GmbH;10640;100;1022071;SBO;10640;
 Ludo Fact GmbH;10171;100;1022154;SBO;10171;
 Ruag Deutschland GmbH;10228;100;1022247;SBO;10228;
@@ -354,7 +354,7 @@ RBA Regionalbus Augsburg GmbH;;100;1031177;SBO;10217;
 WRH Global Deutschland GmbH;10091;100;1031458;SBO;10091;
 Emil Kiessling GmbH;2493018;100;1031874;SBO;2493018;
 Villeroy & Boch AG Hauptverwaltung;10425;100;1031920;SBO;10425;
-Nestle Deutschland AG;10369;100;1032438;SBO;10369;
+Nestle Deutschland AG;10369;100;1032438;SBO;10369;Nestle
 Nestle Deutschland AG;10369;100;1032438;SBO;10523;
 HAHN+KOLB Werkzeuge GmbH;10424;100;1032518;SBO;10420;
 HAHN+KOLB Werkzeuge GmbH;10424;100;1032518;SBO;10424;
@@ -370,9 +370,9 @@ Pietrulla-König Kosmetika GmbH;2493109;100;1034463;SBO;2493109;
 Bodo Möller Chemie GmbH;10538;100;1034653;SBO;10538;bodoMöllerChemie
 Bruchsaler Farbenfabrik GmbH & Co. KG;10353;100;1034942;SBO;10353;BruchsalerFarben
 Straub GmbH;10468;100;1035577;SBO;10468;
-Lady Esther Kosmetik GmbH;10522;100;1035803;SBO;10522;
+Lady Esther Kosmetik GmbH;10522;100;1035803;SBO;10522;LadyEster
 Promera Ettlingen Feinschneidtechnik GmbH;10473;100;1036117;SBO;10473;
-Doduco Contacts and Refining GmbH;10009;100;1037050;SBO;10009;
+Doduco Contacts and Refining GmbH;10009;100;1037050;SBO;10009;Doduco
 Schmidt Kommunalfahrzeuge GmbH;2493125;100;1037760;SBO;2493125;
 Recticel Automobilsysteme GmbH;2493119;100;1038006;SBO;2493119;
 Röchling Automotive SE & Co. KG;10224;100;1038092;SBO;10224;
@@ -385,7 +385,7 @@ D. & E. Günther GmbH;;100;1039601;SBO;10062;
 Bayernland eG;;100;1039728;SBO;10030;
 BaumitBayosan GmbH & Co. KG;10026;100;1039820;SBO;10026;
 WnetPartner AG;10296;100;1039838;SBO;10296;
-Stadtwerke Augsburg Holding GmbH;10263;100;1040385;SBO;10263;
+Stadtwerke Augsburg Holding GmbH;10263;100;1040385;SBO;10263;StadtwerkeAugsburg
 Frankenthaler Pressevertrieb Roth + Horsch GmbH & Co. KG;10384;100;1041085;SBO;10384;
 Borek Kommunikation GmbH;;100;1041671;SBO;10036;
 Boschert GmbH + Co. KG;2492991;100;1041676;SBO;2492991;
@@ -406,7 +406,7 @@ Gebr. Nehl Holzindustrie GmbH & Co. KG;2493025;100;1044917;SBO;2493025;
 Duisburger Versorgungs- und Verkehrsgesellschaft AG;;100;1045349;SBO;10076;
 WMD Vertrieb GmbH;10295;100;1045378;SBO;10295;
 Aquatech GmbH;2492980;100;1045658;SBO;2492980;
-Lohmann & Rauscher GmbH & Co. KG;10372;100;1046656;SBO;10372;
+Lohmann & Rauscher GmbH & Co. KG;10372;100;1046656;SBO;10372;LohmannRauscher
 Management Circle AG;10543;100;1046821;SBO;10543;
 FV Service  SE & Co. KG;10427;100;1046916;SBO;10427;
 Saar-Color GmbH;2493124;100;1047028;SBO;2493124;
@@ -444,12 +444,12 @@ Indatex Services for Finance and Insurance AG;10139;100;1051844;SBO;10139;
 Jannasch GmbH & Co. KG;10147;100;1051847;SBO;10147;
 METZLER GmbH & Co KG;10186;100;1051859;SBO;10186;
 Aerocom GmbH & Co;10342;100;1051861;SBO;10342;
-Keinath Electronic GmbHconsulting & equipment;10404;100;1051909;SBO;10404;KeinathElektronik
+Keinath Electronic GmbHconsulting & equipment;10404;100;1051909;SBO;10404;KeinathElektronik,Electronic,KEINATH
 faigle Kunststoffe GmbH;10090;100;1051962;SBO;10090;
 Hypo Südleasing GmbH;10135;100;1051963;SBO;10135;
 Liechtensteinischer Rundfunk (LRF);10167;100;1051964;SBO;10167;
 Sporteo intern. Sportmanagement AG;10261;100;1051965;SBO;10261;
-Montana technology for Wintersports GmbH;10189;100;1051967;SBO;10189;
+Montana technology for Wintersports GmbH;10189;100;1051967;SBO;10189;Montana
 LUCOM GmbH;2493072;100;1051983;SBO;2493072;
 Ronald Bösch Marktbearbeitungs-Service;10319;100;1052027;SBO;10319;
 Call Consult Fertschnig GmbH;10043;100;1052037;SBO;10043;
@@ -462,7 +462,7 @@ SAERTEX GmbH & Co. KG;10231;100;1052196;SBO;10231;
 CONVISTA CONSULTING AG;10635;100;1052247;SBO;10635;
 KUBA Präzisionsteile GmbH;10158;100;1052273;SBO;10158;
 tectum GmbH;10302;100;1052283;SBO;10302;
-Leica Geosystems AG;10339;100;1052297;SBO;10339;
+Leica Geosystems AG;10339;100;1052297;SBO;10339;Leica
 CutLog GmbH;10061;100;1052298;SBO;10061;
 KUHN Zentrum für mechanische Bearbeitung GmbH;10329;100;1052301;SBO;10329;
 rt1.tv production GmbH;10227;100;1052303;SBO;10227;
@@ -488,7 +488,7 @@ FAIST Mekatronic SRL;10433;100;1052777;SBO;10433;
 BSN medical GmbH;10498;100;1052950;SBO;10498;
 Spantec Spann- und Ankertechnik GmbH;10348;100;1052975;SBO;10348;
 Gremmler Bauchemie GmbH;10351;100;1053023;SBO;10351;Gremmler
-EURO-FRIWA GmbH;10403;100;1053033;SBO;10350;
+EURO-FRIWA GmbH;10403;100;1053033;SBO;10350;EuroFriwa
 EURO-FRIWA GmbH;10403;100;1053033;SBO;10403;
 BKW FMB Energie AG;10335;100;1053210;SBO;10335;
 Private ptm-Akademie GmbH;10358;100;1053219;SBO;10358;
@@ -498,7 +498,7 @@ SMS Group GmbH;10531;100;1053273;SBO;10531;
 KLB KÖTZTAL Lacke+Beschichtungen GmbH;10352;100;1053288;SBO;10352;
 Schneider Schreibgeräte GmbH;10379;100;1054223;SBO;10379;
 RATIONAL Aktiengesellschaft;10216;100;1054445;SBO;10216;
-Nestlé Suisse S.A.;10340;100;1054820;SBO;10340;
+Nestlé Suisse S.A.;10340;100;1054820;SBO;10340;NestleSuisse
 MAKA Systems GmbH;2493078;100;1054986;SBO;2493078;
 Albrecht Elektrotechnik GmbH;2492977;100;1055001;SBO;2492977;
 SMS Software Solution GmbH;10373;100;1055176;SBO;10373;
@@ -577,7 +577,7 @@ Kantonsspital St.Gallen;10493;100;1058286;SBO;10493;
 Jackon GmbH;2493050;100;1058292;SBO;2493050;
 Johann J. Köster GmbH;10503;100;1058296;SBO;10503;
 Spiess-Urania Chemicals GmbH;2493132;100;1058321;SBO;2493132;
-KIRCHHOFF Automotive GmbH;10449;100;1058354;SBO;10449;
+KIRCHHOFF Automotive GmbH;10449;100;1058354;SBO;10449;Kirchhoff
 Müller Service GmbH;10452;100;1058373;SBO;10452;
 Devanlay SA;;100;1058374;SBO;10454;
 Digital Endoscopy GmbH;10455;100;1058384;SBO;10455;digitalEndoscopy,Pentax
@@ -587,9 +587,9 @@ KOKI TECHNIK Transmission Systems GmbH;2493061;100;1058465;SBO;2493061;
 Universitäts Spital ZürichDirektion ICTSAP CCC, Administrative Systeme & Services (IAS);10478;100;1058593;SBO;10478;
 RCA KG;10491;100;1058635;SBO;10491;
 Ropa - Maler, Lackierer, Wasserinstallation, Fugensanierungs- GmbH;30218;100;1058642;SBO;30218;
-Homöopathisches Laboratorium Alexander Pflüger GmbH & Co. KG;10618;100;1058697;SBO;10618;
+Homöopathisches Laboratorium Alexander Pflüger GmbH & Co. KG;10618;100;1058697;SBO;10618;Pflüger
 Chemiepark Bitterfeld Wolfen GmbH;;100;1058743;SBO;10486;
-Bencard Allergie GmbH;10653;100;1058805;SBO;10653;
+Bencard Allergie GmbH;10653;100;1058805;SBO;10653;Bencard
 Paradiesfrucht GmbH;2493101;100;1058812;SBO;2493101;
 Hawle Beteiligungsgesellschaft m.b.H;10469;100;1058813;SBO;10469;
 Fujitsu Technology Solutions GmbH;10382;100;1058851;SBO;10382;
@@ -629,7 +629,7 @@ Hansa Vital GmbH;2493034;100;1063439;SBO;2493034;
 POWER-HYDRAULIK GmbH;10594;100;1063595;SBO;10594;Power-Hydraulik
 W&S Polymer-Solution GmbH;10650;100;1063869;SBO;10650;W&S
 HAI FUELS GmbH;10597;100;1064002;SBO;10597;HaiFuels
-Cosomed GmbH;10607;100;1064022;SBO;10607;
+Cosomed GmbH;10607;100;1064022;SBO;10607;Cosomed
 Kantonsspital Graubünden;10592;100;1064028;SBO;10592;
 Margin 10 Consulting Services, LLC;10593;100;1064029;SBO;10593;
 ProChannel GmbH;2493113;100;1064042;SBO;2493113;
@@ -650,15 +650,15 @@ NFON AG;10626;100;1064382;SBO;10626;NFON
 Vestas Wind Systems A/S;10616;100;1064393;SBO;10616;
 UGA Biopharma GmbH;10669;100;1064404;SBO;10669;UGA
 Sauerstoffwerk Steinfurt E. Howe GmbH & Co. KG;12876;100;1064427;SBO;12876;
-Stellwerk Consulting AG;10625;100;1064448;SBO;10625;
+Stellwerk Consulting AG;10625;100;1064448;SBO;10625;Stellwerk
 Kluthe Chemicals GmbH & Co. KG Holding;10633;100;1064471;SBO;10633;Conti,Kluthe
 Nordische Oelwerke Walther Carroux GmbH & Co KG;12131;100;1064481;SBO;12131;
 mindpoint business solutions UG;10634;100;1064550;SBO;10634;
 Apomedica Pharmazeutische Produkte GmbH;10645;100;1064830;SBO;10645;
 Baumeister chemicals&consulting GmbH & Co. KG;10637;100;1064852;SBO;10637;BaumeisterChemicals
-NEXTCLINICS INTERNATIONAL GmbH;10672;100;1064853;SBO;10672;
+NEXTCLINICS INTERNATIONAL GmbH;10672;100;1064853;SBO;10672;NEXTCLINICS
 AVANTGARDE Experts GmbH;10636;100;1064854;SBO;10636;
-APOMEDICA Deutschland GmbH;10641;100;1064878;SBO;10641;
+APOMEDICA Deutschland GmbH;10641;100;1064878;SBO;10641;Apomedica_DE
 DVZ DatenverarbeitungszentrumMecklenburg-Vorpommern GmbH;10644;100;1064902;SBO;10644;
 Fachverband landwirtschaftlicher Trocknungen in Bayern e.V.;10649;100;1064946;SBO;10649;Futtertrocknung,FuttertrockungFachverband
 Futtertrocknung Lamerdingen eG;10654;100;1064999;SBO;10654;FuttertrockungLamerdingen
@@ -682,7 +682,14 @@ KraussMaffei HighPerformance AG;10673;100;1065062;SBO;10673;
 Coca-Cola Bottlers Japan Inc.;10674;100;1065070;SBO;10674;
 Bencard Allergie GmbH Österreich;10675;100;1065079;SBO;10675;
 ISG Informatik Service KG;10676;100;1065126;SBO;10676;amidori
-Stadtwerke Rosenheim GmbH & Co. KG;10679;100;1065134;SBO;10679;
-Sabris CZ s.r.o.;10678;100;1065139;SBO;10678;
-Thalia Bücher GmbH;10680;100;1065143;SBO;10680;
+Stadtwerke Rosenheim GmbH & Co. KG;10679;100;1065134;SBO;10679;StadtwerkeRosenheim
+Sabris CZ s.r.o.;10678;100;1065139;SBO;10678;Sabris
+Thalia Bücher GmbH;10680;100;1065143;SBO;10680;Thalia
 BCH Brühl-Chemikalien Handel GmbH;10684;100;21093;SBO;10684;BCH
+Das Diakonische Werk der Evangelischen Landeskirche in Baden e.V.;10683;100;1047667;SBO;10683;DiakonischeWerk
+Hottinger Brüel & Kjaer GmbH;10682;100;1038660;SBO;10682;Hottinger
+DVZ Datenverarbeitungszentrum Mecklenburg-Vorpommern GmbH;10644;100;1064902;SBO;10644;DVZ
+Jungheinrich AG –Finanzdienstleistungen;10643;100;1064114;SBO;10643;JHF
+Deutschsprachige SAP Anwendergruppe e.V.;10070;100;1021224;SBO;10070;DeutschsprachigeSapAnwendung
+Johann Bartlechner KG Betonwerk;10685;100;1050240;SBO;10685;JohannBartlechner
+Sunbloom Proteins GmbH;10687;100;1065162;SBO;10687;Sunbloom
