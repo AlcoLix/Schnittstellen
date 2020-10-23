@@ -41,22 +41,22 @@ public class DatabaseConnection {
 	public void sendInsertOrUpdate4Aurea(ArrayList<AureaWorklog> aureaWorklogs) {
 //		StringBuffer sql = new StringBuffer("INSERT INTO 'TRANSFER' (worklogID, \"user\", userID, customer, customerID, ordernumber, orderposition, date, paymentType, paymentMethod, startTime, endTime, issueKey, comment, summary, project, team, timeSpent, timeSpentSeconds, billable, parent, epic, worklogcreate, worklogupdate, displayText) VALUES ");
 		try {
-			CallableStatement cstmt = con.prepareCall("{call dbo.CRM_CRM_UP(?, ?, ?)}");
+			CallableStatement cstmt;
 		
 			StringBuffer sql = new StringBuffer("MERGE \"Transfer\" AS t USING (VALUES ");
 			SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd HH:mm:ss");
 			for (AureaWorklog worklog : aureaWorklogs) {
+				cstmt = con.prepareCall("{call dbo.CRM_CRM_UP(?, ?, ?)}");
 				cstmt.setString(1, worklog.getOrdernumber());
 				cstmt.setString(2, worklog.getOrderposition());
 				cstmt.registerOutParameter(3, Types.NVARCHAR);
+//				System.out.println("order:"+worklog.getOrdernumber());
+//				System.out.println("pos:"+worklog.getOrderposition());
 				cstmt.execute();
-				ResultSet set = cstmt.getResultSet();
+				
 				String UP_SerNo;
-				if(set!=null&&set.next()) {
-					UP_SerNo = set.getString(1);
-				}else {
-					UP_SerNo = "";
-				}
+				UP_SerNo = cstmt.getString(3);
+//				System.out.println("result:"+UP_SerNo);
 				sql.append("(").append("'").append(worklog.getWorklogID()).append("'");
 				sql.append(",").append("'").append(worklog.getUser()).append("'");
 				sql.append(",").append("'").append(worklog.getUserID()).append("'");
