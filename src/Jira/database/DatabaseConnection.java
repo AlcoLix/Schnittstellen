@@ -56,6 +56,9 @@ public class DatabaseConnection {
 				
 				String UP_SerNo;
 				UP_SerNo = cstmt.getString(3);
+				if(UP_SerNo.equalsIgnoreCase("null")) {
+					UP_SerNo = "";
+				}
 //				System.out.println("result:"+UP_SerNo);
 				sql.append("(").append("'").append(worklog.getWorklogID()).append("'");
 				sql.append(",").append("'").append(worklog.getUser()).append("'");
