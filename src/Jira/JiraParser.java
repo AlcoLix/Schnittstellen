@@ -122,6 +122,9 @@ public class JiraParser {
 			if(t.getIssueType().equalsIgnoreCase("support")){
 				//Wenn Support, dann support (Doh!)
 				aurea.setPaymentType("S (Support)");
+			} else if(t.getIssueType().equalsIgnoreCase("bug")){
+				//Wenn Bugt, dann support
+				aurea.setPaymentType("S (Support)");
 			} else {
 				//A, wenn eine Auftragsnummer eingetragen ist, K, wenn keine Auftragsnummer
 				aurea.setPaymentType(!StringUtils.isEmpty(aurea.getOrdernumber())?"A (Auftrag)":"K (Kunde n. Aufwand)");
