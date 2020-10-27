@@ -521,6 +521,7 @@ public class JiraParser {
 		} catch (JSONException e) {
 			
 		}
+		String issueType = fields.getJSONObject("issuetype").getString("name");
 		String epic = "";
 		try { 
 			epic = fields.getString("customfield_10014");
@@ -553,6 +554,7 @@ public class JiraParser {
 		for (Object object2 : worklogs) {
 			Worklog jiraWorklog = new Worklog();
 			JSONObject log = (JSONObject) object2;
+			String userID = log.getJSONObject("author").getString("accountId");
 			String name = log.getJSONObject("author").getString("displayName");
 			String comment = "";
 			try { 
@@ -562,6 +564,9 @@ public class JiraParser {
 			String timeSpent = log.getString("timeSpent");
 			long timeSpentSeconds = log.getLong("timeSpentSeconds");
 			String started = log.getString("started");
+			String updated = log.getString("updated");
+			String created = log.getString("created");
+			String id = log.getString("id");
 			Calendar c = Calendar.getInstance();
 			c.clear();
 			c.set(Calendar.YEAR, Integer.parseInt(started.substring(0, 4)));
@@ -572,8 +577,28 @@ public class JiraParser {
 			c.set(Calendar.MINUTE, Integer.parseInt(started.substring(14, 16)));
 			c.set(Calendar.SECOND, Integer.parseInt(started.substring(17, 19)));
 			Date date = c.getTime();
+			c.clear();
+			c.set(Calendar.YEAR, Integer.parseInt(updated.substring(0, 4)));
+			//-1 because in the json, the first month is 1, in Calendar it is 0
+			c.set(Calendar.MONTH, Integer.parseInt(updated.substring(5, 7))-1);
+			c.set(Calendar.DAY_OF_MONTH, Integer.parseInt(updated.substring(8, 10)));
+			c.set(Calendar.HOUR_OF_DAY, Integer.parseInt(updated.substring(11, 13)));
+			c.set(Calendar.MINUTE, Integer.parseInt(updated.substring(14, 16)));
+			c.set(Calendar.SECOND, Integer.parseInt(updated.substring(17, 19)));
+			Date update =  c.getTime();
+			c.clear();
+			c.set(Calendar.YEAR, Integer.parseInt(created.substring(0, 4)));
+			//-1 because in the json, the first month is 1, in Calendar it is 0
+			c.set(Calendar.MONTH, Integer.parseInt(created.substring(5, 7))-1);
+			c.set(Calendar.DAY_OF_MONTH, Integer.parseInt(created.substring(8, 10)));
+			c.set(Calendar.HOUR_OF_DAY, Integer.parseInt(created.substring(11, 13)));
+			c.set(Calendar.MINUTE, Integer.parseInt(created.substring(14, 16)));
+			c.set(Calendar.SECOND, Integer.parseInt(created.substring(17, 19)));
+			Date create =  c.getTime();
 			jiraWorklog.setComment(comment);
 			jiraWorklog.setDate(date);
+			jiraWorklog.setUpdate(update);
+			jiraWorklog.setCreate(create);
 			jiraWorklog.setIssueKey(key);
 			jiraWorklog.setTimeSpent(timeSpent);
 			jiraWorklog.setUser(name);
@@ -586,6 +611,9 @@ public class JiraParser {
 			jiraWorklog.setProject(project);
 			jiraWorklog.setEpic(epic);
 			jiraWorklog.setParent(parent);
+			jiraWorklog.setWorklogID(id);
+			jiraWorklog.setUserID(userID);
+			jiraWorklog.setIssueType(issueType);
 			retval.add(jiraWorklog);
 		}
 		return retval;
@@ -876,5 +904,73 @@ public class JiraParser {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public static ArrayList<AureaWorklog> parseWorklogList2AureaList(ArrayList<Worklog> worklogList) {
+		ArrayList<AureaWorklog> aureaList = new ArrayList<AureaWorklog>(worklogList.size());
+		for (Worklog worklog : worklogList) {
+			AureaWorklog aurea = new AureaWorklog();
+			aurea.setBillable(worklog.isBillable());
+			aurea.setComment(worklog.getComment());
+			aurea.setCreate(worklog.getCreate());
+			aurea.setCustomer(worklog.getCustomer());
+			aurea.setDate(worklog.getDate());
+			Calendar c = Calendar.getInstance();
+			c.setTime(worklog.getDate());
+			c.add(Calendar.SECOND, (int)worklog.getTimeSpentSeconds());
+			//Evil hack if the time is 00:00
+			if(c.get(Calendar.HOUR_OF_DAY)==0&&c.get(Calendar.MINUTE)==0){
+				c.add(Calendar.MINUTE, -1);
+			}
+			aurea.setEndTime(c.getTime());
+			aurea.setEpic(worklog.getEpic());
+			aurea.setIssueKey(worklog.getIssueKey());
+			aurea.setOrdernumber(worklog.getOrdernumber());
+			aurea.setOrderposition(worklog.getOrderposition());
+			aurea.setParent(worklog.getParent());
+			aurea.setProject(worklog.getProject());
+			aurea.setStartTime(worklog.getDate());
+			aurea.setSummary(worklog.getSummary());
+			aurea.setTimeSpent(worklog.getTimeSpent());
+			aurea.setTimeSpentSeconds(worklog.getTimeSpentSeconds());
+			aurea.setUpdate(worklog.getUpdate());
+			aurea.setWorklogID(worklog.getWorklogID());
+
+			aurea.setUserID(worklog.getUserID());
+			aurea.setUser(AureaMapping.getEmployeeName(worklog.getUserID()));
+			aurea.setCustomerID(AureaMapping.getCustomerNumber(aurea.getCustomer()));
+			//Part TB
+			if(aurea.getCustomerID().equals("1")) {
+				aurea.setUserID(AureaMapping.getEmployeeNumber(aurea.getUserID()));
+			} else {
+				aurea.setUserID("");
+			}
+			aurea.setPaymentMethod(aurea.isBillable()?"J":"N");
+			if(worklog.getIssueType().equalsIgnoreCase("support")){
+				//Wenn Support, dann support (Doh!)
+				aurea.setPaymentType("S (Support)");
+			} else if(worklog.getIssueType().equalsIgnoreCase("bug")){
+				//Wenn Bugt, dann support
+				aurea.setPaymentType("S (Support)");
+			} else {
+				//A, wenn eine Auftragsnummer eingetragen ist, K, wenn keine Auftragsnummer
+				aurea.setPaymentType(!StringUtils.isEmpty(aurea.getOrdernumber())?"A (Auftrag)":"K (Kunde n. Aufwand)");
+			}
+			String team = "ERP";
+			if(StringUtils.containsAny(aurea.getUserID(),"139584","139659","149112","158883")) {
+				team = "CRM";
+			}
+			//Part TB ist immer nTB, niemals support
+			if(aurea.getCustomerID().equals("1")) {
+				aurea.setPaymentMethod("N");
+				if(aurea.getPaymentType().equalsIgnoreCase("S (Support)")){
+					aurea.setPaymentType("K (Kunde n. Aufwand)");
+				}
+			}
+			aurea.setTeam(team);
+			
+			aureaList.add(aurea);
+		}
+		return aureaList;
 	}
 }

@@ -5,6 +5,8 @@ import java.util.Date;
 public class Worklog {
 	private String user;
 	private Date date;
+	private Date update;
+	private Date create;
 	private String timeSpent;
 	private long timeSpentSeconds;
 	private String issueKey;
@@ -16,7 +18,28 @@ public class Worklog {
 	private String parent;
 	private String epic;
 	private String project;
+	private String worklogID;
+	private String userID;
+	private String issueType; 
 	
+	public String getIssueType() {
+		return issueType;
+	}
+	public void setIssueType(String issueType) {
+		this.issueType = issueType;
+	}
+	public String getUserID() {
+		return userID;
+	}
+	public void setUserID(String userID) {
+		this.userID = userID;
+	}
+	public String getWorklogID() {
+		return worklogID;
+	}
+	public void setWorklogID(String worklogID) {
+		this.worklogID = worklogID;
+	}
 	public String getParent() {
 		return parent;
 	}
@@ -78,6 +101,18 @@ public class Worklog {
 	}
 	public void setDate(Date date) {
 		this.date = date;
+	}
+	public Date getUpdate() {
+		return update;
+	}
+	public void setUpdate(Date update) {
+		this.update = update;
+	}
+	public Date getCreate() {
+		return create;
+	}
+	public void setCreate(Date create) {
+		this.create = create;
 	}
 	public String getTimeSpent() {
 		return timeSpent;
