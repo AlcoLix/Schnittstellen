@@ -141,7 +141,34 @@ public class JiraParser {
 				}
 			}
 			aurea.setTeam(team);
-			retval.add(aurea);
+			boolean hasError = false;
+			if(StringUtils.isEmpty(aurea.getComment())) {
+				ErrorMessage.addError("Kommentar leer", aurea);
+				hasError = true;
+			}
+			Calendar start = Calendar.getInstance();
+			start.setTime(aurea.getStartTime());
+			Calendar end = Calendar.getInstance();
+			end.setTime(aurea.getEndTime());
+			if(end.get(Calendar.DAY_OF_MONTH)!=start.get(Calendar.DAY_OF_MONTH)) {
+				ErrorMessage.addError("Worklog geht über 24 Uhr hinaus", aurea);
+				hasError = true;
+			}
+			if(StringUtils.isEmpty(AureaMapping.getCustomerNumber(aurea.getCustomer()))){
+				ErrorMessage.addError("Kunde nicht bekannt oder fehlt", aurea);
+				hasError = true;
+			}
+			if(!StringUtils.containsOnly(aurea.getOrdernumber().trim(),'0','1','2','3','4','5','6','7','8','9')) {
+				ErrorMessage.addError("Auftragsnummer falsch", aurea);
+				hasError = true;
+			}
+			if(!StringUtils.containsOnly(aurea.getOrderposition().trim(),'0','1','2','3','4','5','6','7','8','9')) {
+				ErrorMessage.addError("Auftragsposition falsch", aurea);
+				hasError = true;
+			}
+			if(!hasError) {
+				retval.add(aurea);
+			}
 		}
 		return retval;
 	}

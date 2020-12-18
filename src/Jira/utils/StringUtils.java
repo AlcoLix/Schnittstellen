@@ -217,6 +217,20 @@ public class StringUtils {
 		}
 		return false;
 	}
+	public static boolean containsOnly(String s, char... tokens) {
+		for (int i = 0; i < s.length(); i++) {
+			boolean match = false;
+			for (int j = 0; j < tokens.length; j++) {
+				if(s.charAt(i)==tokens[j]) {
+					match= true;
+				}
+			}
+			if(!match) {
+				return false;
+			}
+		}
+		return true;
+	}
 	public static boolean containsAny(String s, String... tokens){
 		for (int i = 0; i < tokens.length; i++) {
 			if(s.contains(tokens[i])){

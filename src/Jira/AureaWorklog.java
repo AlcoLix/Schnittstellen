@@ -1,5 +1,6 @@
 package Jira;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import Jira.utils.StringUtils;
@@ -180,5 +181,15 @@ public class AureaWorklog {
 			return getSummary();
 		}
 		return getSummary()+"\r\n"+getComment();
+	}
+	public String toString() {
+		StringBuffer buf = new StringBuffer();
+		buf.append("* ").append(getUser()).append("\r\n");
+		SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy");
+		buf.append("* ").append(format.format(getDate())).append("\r\n");
+		format = new SimpleDateFormat("HH:mm:ss");
+		buf.append("* ").append(format.format(getStartTime())).append(" - ").append(format.format(getEndTime())).append("\r\n");
+		buf.append("* ").append(getDisplayText()).append("\r\n");
+		return buf.toString();
 	}
 }
