@@ -1,9 +1,8 @@
 package Jira;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
+
+import Jira.database.DatabaseConnection;
 
 public class AureaMapping {
 
@@ -58,28 +57,31 @@ public class AureaMapping {
 	}
 	
 	private static void init() {
-		try {
-			customers = new ArrayList<Customer>();
-			employees = new ArrayList<Employee>();
-			BufferedReader reader = new BufferedReader(new  FileReader("Firmen_Mapping.csv"));
-			String line = reader.readLine();
-			//First line is the header and can be skipped
-			while((line = reader.readLine())!=null) {
-				customers.add(new Customer(line));
-			}
-			reader.close();
-			reader = new BufferedReader(new FileReader("Mitarbeiter_Mapping.csv"));
-			line = reader.readLine();
-			//First line is the header and can be skipped
-			while((line = reader.readLine())!=null) {
-				employees.add(new Employee(line));
-			}
-			reader.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		customers = DatabaseConnection.getInstance().getCompanyMapping4Aurea();
+		employees = DatabaseConnection.getInstance().getEmployeeMapping4Aurea();
+		//Alter Weg über CSV-Dateien
+//		try {
+//			customers = new ArrayList<Customer>();
+//			employees = new ArrayList<Employee>();
+//			BufferedReader reader = new BufferedReader(new  FileReader("Firmen_Mapping.csv"));
+//			String line = reader.readLine();
+//			//First line is the header and can be skipped
+//			while((line = reader.readLine())!=null) {
+//				customers.add(new Customer(line));
+//			}
+//			reader.close();
+//			reader = new BufferedReader(new FileReader("Mitarbeiter_Mapping.csv"));
+//			line = reader.readLine();
+//			//First line is the header and can be skipped
+//			while((line = reader.readLine())!=null) {
+//				employees.add(new Employee(line));
+//			}
+//			reader.close();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 	}
-	private static class Employee{
+	public static class Employee{
 		private String Vorname;
 		private String Nachname;
 		private String KPSerNo;
@@ -90,6 +92,12 @@ public class AureaMapping {
 			setNachname(values[1]);
 			setKPSerNo(values[2]);
 			setJira(values[3]);
+		}
+		public Employee(String vorname, String nachname, String kPSerNo, String jira) {
+			setVorname(vorname);
+			setNachname(nachname);
+			setKPSerNo(kPSerNo);
+			setJira(jira);
 		}
 		public String getVorname() {
 			return Vorname;
@@ -116,7 +124,7 @@ public class AureaMapping {
 			Jira = jira;
 		}
 	}
-	private static class Customer{
+	public static class Customer{
 		private String Firma;
 		private String Kundennummer;
 		private String StaNo;
@@ -137,6 +145,15 @@ public class AureaMapping {
 			} else {
 				setJira("");
 			}
+		}
+		public Customer(String firma, String kundennummer, String staNo, String firmenNr, String extSystem, String extSchlüssel, String jira) {
+			setFirma(firma);
+			setKundennummer(kundennummer);
+			setStaNo(staNo);
+			setFirmenNr(firmenNr);
+			setExtSystem(extSystem);
+			setExtSchlüssel(extSchlüssel);
+			setJira(jira);
 		}
 		public String getFirma() {
 			return Firma;

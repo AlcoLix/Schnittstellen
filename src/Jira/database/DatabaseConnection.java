@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 import Jira.AureaWorklog;
+import Jira.AureaMapping.Customer;
+import Jira.AureaMapping.Employee;
 
 public class DatabaseConnection {
 	private Connection con;
@@ -23,6 +25,44 @@ public class DatabaseConnection {
 		System.out.println("testing the connectionString");
 		getInstance().connect();
 		getInstance().close();
+	}
+	public ArrayList<Employee> getEmployeeMapping4Aurea() {
+		connect();
+		StringBuffer sql = new StringBuffer("select [Vorname],[Nachname],[KP_SerNo],[Jira-ID] from Mitarbeiter_Mapping");
+		ArrayList<Employee> list = new ArrayList<Employee>();
+		try {
+			Statement st = con.createStatement();
+			st.execute(sql.toString());
+			ResultSet set = st.getResultSet();
+			while(set.next()) {
+				Employee e = new Employee(set.getString("Vorname"), set.getString("Nachname"), set.getString("KP_SerNo"), set.getString("Jira-ID"));
+				list.add(e);
+			}
+			set.close();
+			st.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return list;
+	}
+	public ArrayList<Customer> getCompanyMapping4Aurea() {
+		connect();
+		StringBuffer sql = new StringBuffer("select [Firma],[Kundennummer],[FI_StaNo],[Firmen-Nr ],[Ext  System],[Ext  Schlüssel],[Jira-ID] from Firmen_Mapping");
+		ArrayList<Customer> list = new ArrayList<Customer>();
+		try {
+			Statement st = con.createStatement();
+			st.execute(sql.toString());
+			ResultSet set = st.getResultSet();
+			while(set.next()) {
+				Customer c = new Customer(set.getString("Firma"), set.getString("Kundennummer"), set.getString("FI_StaNo"), set.getString("Firmen-Nr "), set.getString("Ext  System"), set.getString("Ext  Schlüssel"), set.getString("Jira-ID"));
+				list.add(c);
+			}
+			set.close();
+			st.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return list;
 	}
 //	MERGE tableA AS t
 //	USING (VALUES 
