@@ -68,7 +68,7 @@ public class JiraApiHelper extends ApiHelper {
 					conn.setRequestProperty("Content-Length", Integer.toString(body.length()));
 					new DataOutputStream(conn.getOutputStream()).write(body.getBytes("UTF8"));
 				}
-				if (conn.getResponseCode() != 200 || conn.getResponseCode() != 201) {
+				if (conn.getResponseCode() != 200 && conn.getResponseCode() != 201) {
 					throw new RuntimeException("Failed : HTTP Error code : " + conn.getResponseCode());
 				}
 				InputStreamReader in = new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8); // Instanziertes Objekt InputStreamReader namens in, zeigt mir, was ich an Informationen bekomme; kommt von der Klasse InputStream
