@@ -29,7 +29,7 @@ public class ErrorMessage {
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 		buf.append("Fehler: ").append(getError()).append("\r\n");
-		buf.append("Worklog: ").append(getWorklog().toString()).append("\r\n");
+		buf.append("Worklog:\r\n").append(getWorklog().toString()).append("\r\n");
 		return buf.toString();
 	}
 	public static String getErrorsAsString() {

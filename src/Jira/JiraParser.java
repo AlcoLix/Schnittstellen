@@ -170,6 +170,9 @@ public class JiraParser {
 				retval.add(aurea);
 			}
 		}
+		if(!ErrorMessage.getErrorList().isEmpty()) {
+			JiraApiHelper.getInstance().createErrorTask();
+		}
 		return retval;
 	}
 	
