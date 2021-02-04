@@ -47,7 +47,7 @@ public class DatabaseConnection {
 	}
 	public ArrayList<Customer> getCompanyMapping4Aurea() {
 		connect();
-		StringBuffer sql = new StringBuffer("select [Firma],[Kundennummer],[FI_StaNo],[Firmen-Nr ],[Ext  System],[Ext  Schlüssel],[Jira-ID] from Firmen_Mapping");
+		StringBuffer sql = new StringBuffer("select [Firma],[Kundennummer],[FI_StaNo],[Firmen-Nr ],[Ext  System],[Ext  Schlüssel],[Jira-ID] from Firmen_Mapping where [Jira-ID] <> ''");
 		ArrayList<Customer> list = new ArrayList<Customer>();
 		try {
 			Statement st = con.createStatement();

@@ -154,6 +154,10 @@ public class JiraParser {
 				ErrorMessage.addError("Worklog geht über 24 Uhr hinaus", aurea);
 				hasError = true;
 			}
+			if(StringUtils.isEmpty(aurea.getCustomer())) {
+				ErrorMessage.addError("Kunde nicht eingetragen", aurea);
+				hasError = true;
+			}
 			if(StringUtils.isEmpty(AureaMapping.getCustomerNumber(aurea.getCustomer()))){
 				ErrorMessage.addError("Kunde nicht bekannt oder fehlt", aurea);
 				hasError = true;
